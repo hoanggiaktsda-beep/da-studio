@@ -1,5 +1,5 @@
 import {BRAINS,CATEGORIES,LOCKS,FIELD_DEFS,createModel,getWarnings,compilePrompt,projectSnapshot,makeRenderPayload} from "./core.mjs";
-import {SPACE_CATALOG,STYLE_OPTIONS,CAMERA_OPTIONS,LIGHTING_OPTIONS,ASPECT_OPTIONS,recommendVisual} from "./design-catalog.mjs";
+import {SPACE_CATALOG,STYLE_OPTIONS,CAMERA_OPTIONS,LIGHTING_OPTIONS,ASPECT_OPTIONS,FURNITURE_BRANDS,recommendVisual} from "./design-catalog.mjs";
 import {IMAGE_PLATFORMS,adviseImageWorkflow,resolveImageAI} from "./image-advisor.mjs";
 const $=id=>document.getElementById(id);
 const vn={
@@ -13,8 +13,8 @@ const state={mode:"create",master:null,masterURL:null,models:[],expanded:null,ge
 const MAX_IMAGE_BYTES=5_000_000;
 const MAX_REQUEST_BYTES=23_000_000;
 const validImage=f=>!!f&&["image/jpeg","image/png","image/webp"].includes(f.type)&&f.size<=MAX_IMAGE_BYTES;
-const fields=["space","zone","style","camera","lighting","brief","quality","expertMode","imageAI"];
-const liveSettings=()=>({mode:state.mode,space:$("space").value,zone:$("zone").value,style:$("style").value,camera:$("camera").value,lighting:$("lighting").value,aspect:$("aspect").selectedOptions[0]?.textContent||"3:2 Ngang",brief:$("brief").value,size:$("aspect").value,quality:$("quality").value,expertMode:$("expertMode").value,imageAI:$("imageAI").value,chosenBrains:[...document.querySelectorAll("[data-brain]:checked")].map(x=>x.value),locks:[...document.querySelectorAll("[data-lock]:checked")].map(x=>x.value),masterImage:state.master,models:state.models});
+const fields=["space","zone","furnitureBrand","style","camera","lighting","brief","quality","expertMode","imageAI"];
+const liveSettings=()=>({mode:state.mode,space:$("space").value,zone:$("zone").value,furnitureBrand:$("furnitureBrand").value==="Thương hiệu khác (nhập tên)"?$("customBrand").value.trim():$("furnitureBrand").value,style:$("style").value,camera:$("camera").value,lighting:$("lighting").value,aspect:$("aspect").selectedOptions[0]?.textContent||"3:2 Ngang",brief:$("brief").value,size:$("aspect").value,quality:$("quality").value,expertMode:$("expertMode").value,imageAI:$("imageAI").value,chosenBrains:[...document.querySelectorAll("[data-brain]:checked")].map(x=>x.value),locks:[...document.querySelectorAll("[data-lock]:checked")].map(x=>x.value),masterImage:state.master,models:state.models});
 const text=(tag,value,cls)=>{const x=document.createElement(tag);x.textContent=value;if(cls)x.className=cls;return x};
 const control=(tag,{value="",onChange,options=null,placeholder=""}={})=>{const e=document.createElement(tag);if(options){for(const v of options){const o=document.createElement("option");o.value=v;o.textContent=vi(v);e.append(o)}}if(tag==="input")e.type="text";e.value=value;e.placeholder=placeholder;e.addEventListener("input",()=>onChange?.(e.value));return e};
 function inputLabel(label,element){const l=text("label",label);l.append(element);return l}
@@ -103,6 +103,9 @@ function updateZone(){populate($("zone"),SPACE_CATALOG[$("space").value]||SPACE_
 for(const group of [...new Set(IMAGE_PLATFORMS.map(p=>p.group))]){const g=document.createElement("optgroup");g.label=group;for(const p of IMAGE_PLATFORMS.filter(p=>p.group===group)){const o=document.createElement("option");o.value=p.id;o.textContent=p.name;g.append(o)}$("imageAI").append(g)}
 $("imageAI").addEventListener("change",drawAdvisor);
 $("copyForAI").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(compile());showStatus("Đã sao chép prompt cho AI được chọn.")}catch(e){showStatus("Không thể sao chép: "+e.message,true)}});
+for(const [group,names] of FURNITURE_BRANDS){const g=document.createElement("optgroup");g.label=group;for(const name of names){const o=document.createElement("option");o.value=name;o.textContent=name;g.append(o)}$("furnitureBrand").append(g)}
+$("furnitureBrand").value="Không áp dụng";
+$("furnitureBrand").addEventListener("change",()=>{$("customBrandWrap").hidden=$("furnitureBrand").value!=="Thương hiệu khác (nhập tên)"});
 populate($("style"),STYLE_OPTIONS,false);populate($("camera"),CAMERA_OPTIONS,false);populate($("lighting"),LIGHTING_OPTIONS,false);updateZone();
 for(const [label,value] of ASPECT_OPTIONS){const option=document.createElement("option");option.value=value;option.textContent=label;$("aspect").append(option)}
 function updateRenderHints(){
@@ -133,6 +136,7 @@ $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)retu
  if(v.models.length>200)throw Error("Dự án có quá 200 Model");
  for(const item of v.models)if(!item||typeof item!=="object"||Array.isArray(item))throw Error("Model không hợp lệ");for(const m of state.models)revokeRefs(m);state.models=v.models.map(()=>null).map((_,i)=>{const o=v.models[i],m=createModel();return {...m,...o,id:m.id,references:[],properties:o.properties&&typeof o.properties==="object"?o.properties:{},notes:(o.notes||"")+(o.references?.length?" [Cần tải lại ảnh gốc sau khi nhập JSON.]":"")}});if(typeof v.space==="string"&&SPACE_CATALOG[v.space]){$("space").value=v.space;updateZone()}
  for(const key of fields){if(typeof v[key]==="string"&&[...$(key).options||[]].length){if([...$(key).options].some(x=>x.value===v[key]))$(key).value=v[key]}else if(key==="brief"&&typeof v[key]==="string")$(key).value=v[key]}
+ if(typeof v.furnitureBrand==="string"){const known=[...$("furnitureBrand").options].some(o=>o.value===v.furnitureBrand);if(!known&&v.furnitureBrand){$("furnitureBrand").value="Thương hiệu khác (nhập tên)";$("customBrand").value=v.furnitureBrand;$("customBrandWrap").hidden=false}else{$("furnitureBrand").value=v.furnitureBrand||"Không áp dụng";$("customBrand").value="";$("customBrandWrap").hidden=true}}
  if(v.aspect){const option=[...$("aspect").options].find(x=>x.textContent===v.aspect);if(option)$("aspect").selectedIndex=option.index}updateRenderHints()
  state.generated=null;$("resultView").removeAttribute("src");$("resultView").hidden=true;$("resultEmpty").hidden=false;$("downloadResult").hidden=true;
  $("promptOutput").textContent="Prompt đã biên dịch sẽ hiển thị tại đây...";$("warnings").replaceChildren();
@@ -146,7 +150,7 @@ function startNewProject(){
  updateMaster(null);
  $("space").selectedIndex=0;updateZone();
  for(const id of ["style","camera","lighting","aspect","imageAI","expertMode"])$(id).selectedIndex=0;
- $("quality").value="medium";$("brief").value="";
+ $("quality").value="medium";$("brief").value="";$("furnitureBrand").value="Không áp dụng";$("customBrand").value="";$("customBrandWrap").hidden=true;
  for(const c of document.querySelectorAll("[data-brain]"))c.checked=true;
  for(const c of document.querySelectorAll("[data-lock]"))c.checked=["Architecture","Geometry","Camera"].includes(c.value);
  $("manualExperts").hidden=true;

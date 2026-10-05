@@ -57,6 +57,8 @@ export function compilePrompt(c){
  "LIGHTING: "+(c.lighting==="HG tự đề xuất"?recommendVisual(c).lighting:(c.lighting||"Natural Daylight")),
  "ASPECT RULE: Preserve the requested composition. When the image API does not support the exact requested aspect, use the nearest supported size and warn the user; do not falsely label the output aspect.",
  "DESIGN BRIEF: "+(c.brief?.trim()||"Produce a coherent professional architecture/interior design."),
+ "INTERIOR BRAND DIRECTION: "+(c.furnitureBrand||"Không áp dụng"),
+ "BRAND RULE: Brand is a design reference only. Do not claim official products, exact catalog models, verified authenticity or protected brand identity without supplied visual/product evidence. Per-Model references and verified product identity override global inspiration.",
  "EXPERT ORCHESTRATOR: "+c.expertMode,
  "ACTIVE BRAINS: "+brains.map(b=>b.name+" ("+b.experts.length+" expert roles)").join("; "),
  "EXPERT DECISION: assess spatial logic, product scale, material behavior, lighting physics, camera composition; check conflicts before execution.",
