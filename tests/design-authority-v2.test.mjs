@@ -69,3 +69,14 @@ test("V2.2 door swing clearance blocks overlapping furniture",()=>{
  assert.ok(auditLayout(base).issues.some(i=>i.field==="pair:cửa:entrance:sofa"));
  assert.equal(auditLayout({...base,layoutItems:[{...sofa,xMm:1500}]}).ok,true);
 });
+
+test("regression: rectangular furniture fails only when both rotations fail",()=>{
+ const base={roomWidthMm:3000,roomDepthMm:5000,models:[{id:"a",name:"Sofa",selected:true,dimensions:"4500 x 2800 mm",material:"Gỗ"}]};
+ assert.equal(auditDesign(base).ok,true);
+ assert.equal(auditDesign({...base,models:[{...base.models[0],dimensions:"5100 x 2900 mm"}]}).ok,false);
+});
+test("regression: Vietnamese architectural lock conflicts are detected",()=>{
+ const c={mode:"edit",locks:["Architecture","Geometry"],models:[],masterImage:{name:"a.png"},brief:"Hãy phá tường và nới rộng phòng"};
+ assert.ok(getWarnings(c).some(x=>x.includes("Architecture Lock")));
+ assert.ok(getWarnings(c).some(x=>x.includes("Geometry Lock")));
+});
