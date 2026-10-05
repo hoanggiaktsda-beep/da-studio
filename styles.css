@@ -74,3 +74,9 @@ button:hover,.quiet:hover{filter:brightness(1.13)}
 .advisor-note{margin-top:14px}
 @media(max-width:1050px){.advisor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.advisor-grid,.advisor-steps{grid-template-columns:1fr}}
+
+.advisor-picker{display:grid;grid-template-columns:minmax(220px,1fr) minmax(230px,1.4fr);gap:12px;align-items:end;padding:15px;border:1px solid #66553a;border-radius:8px;background:#1c1913;margin:14px 0}
+.advisor-picker label{margin:0}.advisor-picker select{width:100%}
+.advisor-selection{font-size:12px;line-height:1.6;color:#d9c7a2}
+.advisor-picker button{grid-column:1/-1}
+@media(max-width:650px){.advisor-picker{grid-template-columns:1fr}}
