@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101419"><meta name="description" content="HOANGGIA AI Design Studio — Architecture, Interior, Multi-Model References">
+<title>HOANGGIA AI · Design Studio</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<header class="top">
+ <div class="brand"><span class="mark">H<span>G</span></span><div><b>HOANGGIA <i>AI</i></b><small>DESIGN STUDIO · V1.4</small></div></div>
+ <div class="right-top"><span class="pill"><span class="dot"></span> BẢN THỬ NGHIỆM</span><button id="exportProject" class="quiet">Xuất dự án</button><label class="file-label quiet" for="importProject">Nhập JSON</label><input id="importProject" type="file" accept=".json,application/json" hidden></div>
+</header>
+<div class="workspace">
+ <aside class="left">
+ <div class="section-label">WORKSPACE</div>
+ <nav class="tabs" aria-label="Chế độ làm việc"><button id="createTab" class="selected" data-mode="create"><span>01</span> AI IMAGE CREATOR</button><button id="editTab" data-mode="edit"><span>02</span> AI IMAGE EDITOR</button></nav>
+ <section class="panel">
+  <div class="panel-heading"><span class="eyebrow">01 / DESIGN INPUT</span><span class="mini">ĐIỀU KHIỂN</span></div>
+  <div class="grid-two"><label>Loại không gian<select id="space"><option>Nội thất</option><option>Kiến trúc</option><option>Cảnh quan</option><option>Quy hoạch đô thị</option></select></label><label>Phong cách<select id="style"><option>Minimal Luxury</option><option>Contemporary</option><option>Modern</option><option>Neo-Classic</option><option>Wabi-Sabi</option><option>Japandi</option><option>Art Deco</option><option>Custom</option></select></label></div>
+  <label>Ý tưởng thiết kế<textarea id="brief" rows="3" placeholder="Ví dụ: phòng khách luxury, ánh sáng ban ngày, đá travertine, bố cục tĩnh..."></textarea></label>
+  <div class="grid-two"><label>Khung hình<select id="size"><option value="1536x1024">3:2 Ngang</option><option value="1024x1536">2:3 Dọc</option><option value="1024x1024">1:1 Vuông</option></select></label><label>Chất lượng<select id="quality"><option value="medium">Medium</option><option value="low">Draft</option><option value="high">High</option></select></label></div>
+  <label class="upload" for="masterInput"><span id="masterLabel">+ TẢI MASTER / REFERENCE</span><small id="masterHint">Không bắt buộc khi tạo ảnh từ văn bản</small></label><input type="file" id="masterInput" accept="image/png,image/jpeg,image/webp" hidden>
+  <div class="master-preview" id="masterArea" hidden><img id="masterPreview" alt="Ảnh master"><button id="clearMaster" class="mini-btn">Gỡ ảnh</button></div>
+ </section>
+ <section class="panel">
+  <div class="panel-heading"><span class="eyebrow">02 / MULTI-MODEL LIBRARY</span><strong id="modelCount">0 MODEL</strong></div>
+  <p class="hint">Mỗi Model có tên, mục tiêu thay thế và ảnh tham chiếu riêng. Có thể chọn nhiều Model cho một lần dựng ảnh.</p>
+  <div id="models" class="models"></div><button id="addModel" class="outline full">+ THÊM MODEL</button>
+ </section>
+ <section class="panel">
+  <div class="panel-heading"><span class="eyebrow">03 / DESIGN LOCK</span><span class="mini">EDITOR</span></div>
+  <div id="locks" class="lock-grid"></div>
+ </section>
+ </aside>
+ <main class="right">
+  <section class="hero"><div><span class="eyebrow gold">ARCHITECTURE · INTERIOR · INTELLIGENCE</span><h1>Design without limits.<br><em>Preserve what matters.</em></h1><p>Tạo ý tưởng, đồng bộ hình ảnh, kiểm soát từng Model — dành cho quy trình thiết kế kiến trúc và nội thất chuyên nghiệp.</p></div><div class="hero-outline" aria-hidden="true"><span>H</span><span>G</span></div></section>
+  <section class="panel">
+   <div class="panel-heading"><span class="eyebrow">04 / EXPERT ORCHESTRATOR</span><span class="mini">48 EXPERTS · 6 BRAINS</span></div>
+   <div class="brain-grid" id="brainGrid"></div><label>Điều phối chuyên gia<select id="expertMode"><option value="auto">AUTO — Kích hoạt theo ngữ cảnh</option><option value="manual">MANUAL — Chọn nhóm thủ công</option></select></label>
+   <div id="manualExperts" hidden></div>
+   <div class="actions"><button id="compile" class="primary">BIÊN DỊCH PROMPT <span>↗</span></button><button class="outline" id="copyPrompt">SAO CHÉP</button><button class="outline" id="downloadPrompt">TẢI .TXT</button></div>
+   <div id="warnings" class="warnings" role="status" aria-live="polite"></div>
+   <pre id="promptOutput">Prompt đã biên dịch sẽ hiển thị tại đây...</pre>
+  </section>
+  <section class="panel render">
+   <div class="panel-heading"><span class="eyebrow">05 / IMAGE EXECUTION</span><span class="mini">SECURE AI CONNECTOR</span></div>
+   <p class="hint">GitHub Pages miễn phí lưu giao diện. Kết xuất AI chỉ chạy khi kết nối gateway riêng có xác thực; không nhập API key AI vào website công khai.</p>
+   <details><summary>Cấu hình gateway (tùy chọn)</summary><label>Gateway URL (HTTPS)<input id="gateway" type="url" placeholder="https://your-worker.workers.dev"></label><label>Studio Access Token <input id="studioToken" type="password" placeholder="Token kiểm soát quyền dùng AI" autocomplete="off"></label><small>Token chỉ tồn tại trong phiên trang đang mở, không được xuất ra dự án.</small></details>
+   <div class="actions"><button id="renderButton" class="primary">GENERATE / EDIT IMAGE <span>↗</span></button><span class="hint" id="renderStatus" role="status" aria-live="polite">Chưa kết nối AI Gateway</span></div>
+   <div class="comparison"><div class="result-frame"><span>INPUT IMAGE</span><img id="inputView" alt="Ảnh đầu vào" hidden><div class="placeholder" id="inputEmpty">MASTER / REFERENCE</div></div><div class="result-frame"><span>AI OUTPUT</span><img id="resultView" alt="Kết quả AI" hidden><div class="placeholder" id="resultEmpty">CHƯA RENDER</div></div></div>
+   <button id="downloadResult" class="outline" hidden>TẢI ẢNH KẾT QUẢ ↓</button>
+  </section>
+  <footer>HOANGGIA AI · DESIGN STUDIO V1.4 <span>Không lưu ảnh lên GitHub · Bản thử nghiệm</span></footer>
+ </main>
+</div>
+<script type="module" src="./app.mjs"></script>
+</body></html>
