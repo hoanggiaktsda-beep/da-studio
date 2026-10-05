@@ -80,3 +80,10 @@ button:hover,.quiet:hover{filter:brightness(1.13)}
 .advisor-selection{font-size:12px;line-height:1.6;color:#d9c7a2}
 .advisor-picker button{grid-column:1/-1}
 @media(max-width:650px){.advisor-picker{grid-template-columns:1fr}}
+
+/* Approved artwork: contained, no crop of brand text; fallback keeps previous logo. */
+.hero-art-frame{aspect-ratio:16/9;width:100%;max-width:540px;overflow:hidden}
+.hero-visual{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:2;background:#10100e}
+.hero-visual[hidden]{display:none}
+.hero-art:has(.hero-visual:not([hidden])) .hero-art-frame{border-color:#9e8458}
+@media(max-width:800px){.hero-art{display:flex;padding:12px 24px 24px}.hero-art::before{display:none}.hero-art-frame{max-width:100%}}
