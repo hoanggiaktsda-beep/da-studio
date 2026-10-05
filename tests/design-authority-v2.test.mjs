@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {designAuthority,selectBrains,compilePrompt,getWarnings,auditDesign} from "../core.mjs";
+import {designAuthority,selectBrains,compilePrompt,getWarnings,auditDesign,auditLayout} from "../core.mjs";
 for(const [space,lead] of [["Nội thất","interior"],["Kiến trúc","architecture"],["Cảnh quan","architecture"],["Quy hoạch đô thị","urban"]]){
  test(space+" keeps the design lead even when manually selecting photography",()=>{
   assert.equal(designAuthority(space).lead,lead);
@@ -36,4 +36,14 @@ test("unverified dimensions and materials never become fabricated specifications
 test("model cannot fit room in either orientation",()=>{
  const a=auditDesign({roomWidthMm:2000,roomDepthMm:2000,models:[{id:"2",selected:true,name:"Tủ",dimensions:"2500 x 2600 mm",material:"Gỗ"}]});
  assert.equal(a.ok,false);assert.ok(a.issues.some(i=>i.field==="model:2"&&i.severity==="error"));
+});
+
+test("layout checks collisions, wall boundaries, project clearance and malformed data",()=>{
+ const base={roomWidthMm:5000,roomDepthMm:4000,layoutMinimumGapMm:500};
+ const item=(id,x,y,w=1000,d=700)=>({id,xMm:x,yMm:y,widthMm:w,depthMm:d});
+ assert.ok(auditLayout({...base,layoutItems:[item("sofa",0,0),item("table",500,300)]}).issues.some(i=>i.field==="pair:sofa:table"));
+ assert.ok(auditLayout({...base,layoutItems:[item("cabinet",4600,0)]}).issues.some(i=>i.message.includes("ranh giới")));
+ assert.ok(auditLayout({...base,layoutItems:[item("sofa",0,0),item("table",1300,0)]}).issues.some(i=>i.message.includes("ngưỡng dự án")));
+ assert.equal(auditLayout({...base,layoutItems:[item("sofa",0,0),item("table",1700,0)]}).ok,true);
+ assert.equal(auditLayout({...base,layoutItems:[{id:"bad"}]}).ok,false);
 });
