@@ -50,6 +50,17 @@ export function auditLayout(c={}){
  const hasRoom=c.roomWidthMm!==""&&c.roomDepthMm!==""&&Number.isFinite(roomW)&&Number.isFinite(roomD)&&roomW>0&&roomD>0;
  const boxes=[];
  const seen=new Set();
+ const obstacles=Array.isArray(c.layoutObstacles)?c.layoutObstacles:[];
+ for(const obstacle of obstacles){
+  const name=String(obstacle?.id||"vật cản");
+  const v=[obstacle?.xMm,obstacle?.yMm,obstacle?.widthMm,obstacle?.depthMm];
+  if(v.some(n=>n===""||n===null||n===undefined||!Number.isFinite(Number(n)))||Number(v[0])<0||Number(v[1])<0||Number(v[2])<=0||Number(v[3])<=0){
+   issues.push({severity:"error",field:"obstacle:"+name,message:"Vật cản có tọa độ hoặc kích thước không hợp lệ: "+name});continue;
+  }
+  const [x,y,w,d]=v.map(Number);
+  if(hasRoom&&(x+w>roomW||y+d>roomD))issues.push({severity:"error",field:"obstacle:"+name,message:"Vật cản vượt ranh giới phòng: "+name});
+  boxes.push({id:name,x,y,w,d,obstacle:true});
+ }
  if(c.layoutMinimumGapMm!==""&&c.layoutMinimumGapMm!==undefined&&c.layoutMinimumGapMm!==null&&(!Number.isFinite(Number(c.layoutMinimumGapMm))||Number(c.layoutMinimumGapMm)<0))issues.push({severity:"error",field:"layoutMinimumGapMm",message:"Ngưỡng khoảng cách dự án phải là số không âm."});
  for(const item of items){
   const id=String(item?.id||item?.name||"unknown");
@@ -74,11 +85,11 @@ export function auditLayout(c={}){
    const gap=Math.hypot(dx,dy);
    evidence.push("Khoảng cách biên "+a.id+" / "+b.id+": "+Math.round(gap)+" mm (mặt bằng giả định)");
    const min=c.layoutMinimumGapMm;
-   if(min!==""&&min!==undefined&&min!==null&&Number.isFinite(Number(min))&&Number(min)>=0&&gap<Number(min))
+   if(!a.obstacle&&!b.obstacle&&min!==""&&min!==undefined&&min!==null&&Number.isFinite(Number(min))&&Number(min)>=0&&gap<Number(min))
     issues.push({severity:"error",field:"pair:"+a.id+":"+b.id,message:"Khoảng cách "+a.id+" / "+b.id+" nhỏ hơn ngưỡng dự án."});
   }
  }
- if(items.length&&!hasRoom)issues.push({severity:"unknown",field:"layoutRoom",message:"Chưa đủ kích thước phòng để xác minh vị trí sản phẩm."});
+ if((items.length||obstacles.length)&&!hasRoom)issues.push({severity:"unknown",field:"layoutRoom",message:"Chưa đủ kích thước phòng để xác minh vị trí sản phẩm."});
  if(items.length&&boxes.length&&hasRoom)evidence.push("Kiểm tra ranh giới trên mặt bằng chữ nhật "+roomW+" × "+roomD+" mm; chưa tính cửa, tường, hướng mở, lối thoát hiểm.");
  if(!items.length)issues.push({severity:"unknown",field:"layoutItems",message:"Chưa có tọa độ mặt bằng sản phẩm; không thể xác nhận bố trí, va chạm hay khoảng cách."});
  return {ok:!issues.some(i=>i.severity==="error"),issues,evidence};
