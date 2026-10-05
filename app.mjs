@@ -98,7 +98,16 @@ $("imageAI").addEventListener("change",drawAdvisor);
 $("copyForAI").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(compile());showStatus("Đã sao chép prompt cho AI được chọn.")}catch(e){showStatus("Không thể sao chép: "+e.message,true)}});
 populate($("style"),STYLE_OPTIONS,false);populate($("camera"),CAMERA_OPTIONS,false);populate($("lighting"),LIGHTING_OPTIONS,false);updateZone();
 for(const [label,value] of ASPECT_OPTIONS){const option=document.createElement("option");option.value=value;option.textContent=label;$("aspect").append(option)}
-$("aspect").addEventListener("change",()=>{$("aspectHint").textContent="Độ phân giải API: "+$("aspect").value.replace("x","×")+(["3:2 Ngang","2:3 Dọc","1:1 Vuông"].includes($("aspect").selectedOptions[0].textContent)?"":" · API chỉ hỗ trợ tỷ lệ gần đúng")});
+function updateRenderHints(){
+ const opt=$("aspect").selectedOptions[0],name=opt?.textContent||"3:2 Ngang",size=$("aspect").value;
+ const exact=["1:1 Vuông","3:2 Ngang","2:3 Dọc"].includes(name);
+ $("aspectHint").textContent="API: "+size.replace("x","×")+(exact?" · Đúng tỷ lệ":" · Chỉ gần đúng, chưa cắt/căn lại đúng tỷ lệ");
+ const descriptions={low:"Nháp: ưu tiên tốc độ và tiết kiệm chi phí.",medium:"Tiêu chuẩn: cân bằng tốc độ, chi phí và chi tiết.",high:"Cao: ưu tiên độ chi tiết; có thể chậm và tốn chi phí hơn."};
+ $("qualityHint").textContent=descriptions[$("quality").value]+" Phụ thuộc AI được kết nối.";
+}
+$("aspect").addEventListener("change",updateRenderHints);
+$("quality").addEventListener("change",updateRenderHints);
+updateRenderHints();
 $("space").addEventListener("change",()=>{updateZone();drawAdvisor()});
 for(const b of BRAINS){const card=text("div","","brain");card.append(text("b",String(b.experts.length)),text("small",vi(b.name)));$("brainGrid").append(card);
  const l=text("label","","");const c=document.createElement("input");c.type="checkbox";c.className="toggle";c.value=b.id;c.dataset.brain="true";c.checked=true;l.append(c," "+vi(b.name)+" ("+b.experts.length+")");$("manualExperts").append(l);
@@ -115,7 +124,7 @@ $("downloadPrompt").onclick=()=>downloadText("hoanggia-prompt.txt",compile());
 $("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"1.8",...projectSnapshot(liveSettings())},null,2),"application/json");
 $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;const v=JSON.parse(await f.text());if(!Array.isArray(v.models))throw Error("Sai cấu trúc JSON");for(const m of state.models)revokeRefs(m);state.models=v.models.slice(0,200).map(()=>null).map((_,i)=>{const o=v.models[i],m=createModel();return {...m,...o,id:m.id,references:[],properties:o.properties&&typeof o.properties==="object"?o.properties:{},notes:(o.notes||"")+(o.references?.length?" [Cần tải lại ảnh gốc sau khi nhập JSON.]":"")}});if(typeof v.space==="string"&&SPACE_CATALOG[v.space]){$("space").value=v.space;updateZone()}
  for(const key of fields){if(typeof v[key]==="string"&&[...$(key).options||[]].length){if([...$(key).options].some(x=>x.value===v[key]))$(key).value=v[key]}else if(key==="brief"&&typeof v[key]==="string")$(key).value=v[key]}
- if(v.aspect){const option=[...$("aspect").options].find(x=>x.textContent===v.aspect);if(option)$("aspect").selectedIndex=option.index}
+ if(v.aspect){const option=[...$("aspect").options].find(x=>x.textContent===v.aspect);if(option)$("aspect").selectedIndex=option.index}updateRenderHints()
  setMode(v.mode==="edit"?"edit":"create");drawModels();updateMaster(null);showStatus("Đã nhập cấu hình. Vì lý do bảo mật, vui lòng tải lại file ảnh gốc.");}catch(e){showStatus("Không nhập được JSON: "+e.message,true)}finally{e.target.value=""}};
 $("renderButton").onclick=render;
 $("downloadResult").onclick=()=>{if(!state.generated)return;const a=document.createElement("a");a.href=state.generated;a.download="hoanggia-ai-image.png";document.body.append(a);a.click();a.remove()};
