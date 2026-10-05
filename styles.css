@@ -26,3 +26,32 @@ button:hover,.quiet:hover{filter:brightness(1.13)}
 .top .brand b{font-size:15px;line-height:1.2;letter-spacing:.09em;white-space:nowrap}
 .top .brand small{font-size:9px;line-height:1.4;letter-spacing:.12em;white-space:nowrap}
 @media(max-width:650px){.top{align-items:flex-start}.top .brand-logo{width:40px!important;height:40px!important;min-width:40px;max-width:40px;max-height:40px;flex-basis:40px}.top .brand b{font-size:13px}.top .brand small{font-size:8px}.right-top{margin-left:auto}}
+
+/* V1.7 — Editorial hero art direction: balanced typography, geometry and whitespace. */
+.hero{position:relative;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(245px,.65fr);gap:0;min-height:340px;padding:0!important;overflow:hidden;background:radial-gradient(ellipse at 75% 35%,#211e18 0%,#111210 43%,#0b0d0d 80%);border:1px solid #39362f;border-radius:12px}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;background:repeating-linear-gradient(90deg,transparent 0,transparent 119px,#7c6b4b20 120px)}
+.hero-copy{z-index:1;display:flex;flex-direction:column;min-width:0;padding:26px 38px 21px}
+.hero-kicker{display:flex;align-items:center;gap:11px;color:#cbb485;font-size:10px;font-weight:700;letter-spacing:.19em;white-space:nowrap}
+.hero-kicker-line{width:22px;height:1px;background:#c9a86a}
+.hero-kicker-separator{color:#5b574b}
+.hero-content{margin:auto 0;padding:24px 0 26px}
+.hero-overline{display:block;color:#b4afa4;font-size:10px;letter-spacing:.18em;font-weight:600}
+.hero h1{font-size:clamp(34px,3.15vw,56px);line-height:1.13;letter-spacing:-.055em;margin:15px 0 17px;font-weight:620}
+.hero h1 em{color:#c9a86a;font-style:normal}
+.hero p{max-width:490px;color:#b9bbb7;font-size:13px;line-height:1.8;margin:0}
+.hero-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:21px}
+.hero-tags span{font-size:9px;font-weight:700;letter-spacing:.12em;color:#c8b58e;border:1px solid #574b36;border-radius:3px;padding:5px 9px;background:#bba16b0a}
+.hero-footer{display:flex;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid #4942356b;color:#8d8779;font-size:9px;letter-spacing:.13em}
+.hero-art{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;padding:30px;background:linear-gradient(125deg,transparent,#1d1a15a6)}
+.hero-art::before{content:"";position:absolute;top:11%;bottom:11%;left:0;width:1px;background:linear-gradient(transparent,#796b50,transparent)}
+.hero-art-frame{position:relative;width:min(100%,265px);aspect-ratio:1/1;border:1px solid #66553a88;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#352a1b3b,transparent 70%)}
+.hero-art-frame::before,.hero-art-frame::after{content:"";position:absolute;width:17px;height:17px;border-color:#c6a56a}
+.hero-art-frame::before{top:-1px;left:-1px;border-top:2px solid;border-left:2px solid}
+.hero-art-frame::after{bottom:-1px;right:-1px;border-bottom:2px solid;border-right:2px solid}
+.hero-art-h,.hero-art-g{font-family:Georgia,'Times New Roman',serif;font-weight:400;line-height:1;font-size:clamp(90px,10vw,165px);letter-spacing:-.12em}
+.hero-art-h{color:#c9a86a4d}.hero-art-g{color:#d9c6a36e;transform:translate(-7px,20px)}
+.hero-art-rule{position:absolute;width:42%;height:1px;left:12%;bottom:17%;background:#a28a5b}
+.hero-art-caption{position:absolute;bottom:11%;right:12%;font-size:8px;letter-spacing:.2em;line-height:1.6;text-align:right;color:#aa9674}
+@media(max-width:1250px){.hero{grid-template-columns:minmax(0,1.6fr) minmax(190px,.65fr)}.hero-copy{padding:23px 26px 18px}.hero-art{padding:24px}.hero h1{font-size:clamp(31px,3.2vw,46px)}}
+@media(max-width:800px){.hero{grid-template-columns:1fr;min-height:0}.hero-copy{padding:26px}.hero-content{padding:30px 0}.hero-art{display:none}.hero h1{font-size:clamp(32px,6vw,44px)}}
+@media(max-width:450px){.hero-copy{padding:20px}.hero-kicker{font-size:8px;gap:7px;letter-spacing:.11em}.hero-kicker-line{width:14px}.hero-overline{font-size:9px}.hero h1{font-size:32px}.hero p{font-size:12px}.hero-footer{font-size:8px}}
