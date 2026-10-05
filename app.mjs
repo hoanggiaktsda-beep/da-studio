@@ -77,7 +77,7 @@ async function render(){
  if(!resolveImageAI(c.imageAI,c).canRender){showStatus("AI đã chọn chưa được kết nối trực tiếp. Hãy sao chép prompt và mở nền tảng AI tương ứng.",true);return}
  if(state.master&&!validImage(state.master)){showStatus("Ảnh gốc phải là JPG/PNG/WebP và không quá 5 MB.",true);return}
  if(c.mode==="edit"&&!state.master){showStatus("Cần tải ảnh gốc trước khi chỉnh sửa.",true);return}
- if(w.some(x=>x.startsWith("Xung đột")||x.includes("Tối đa 16"))){showStatus("Có xung đột cần giải quyết trước khi tạo ảnh.",true);return}
+ if(w.some(x=>x.startsWith("Xung đột")||x.includes("Tối đa 16")||x.startsWith("Ngày/giờ địa phương"))){showStatus("Có xung đột cần giải quyết trước khi tạo ảnh.",true);return}
  const endpoint=$("gateway").value.trim().replace(/\/+$/,"");const token=$("studioToken").value.trim();
  if(!endpoint||!token){showStatus("Cần địa chỉ cổng AI và mã truy cập. Xem hướng dẫn cấu hình.",true);return}
  if(!(/^https:\/\//.test(endpoint)||/^http:\/\/localhost(?::\d+)?$/.test(endpoint))){showStatus("Cổng AI phải dùng HTTPS (hoặc localhost).",true);return}
