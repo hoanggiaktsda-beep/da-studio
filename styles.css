@@ -106,3 +106,66 @@ button:hover,.quiet:hover{filter:brightness(1.13)}
 .hero-gallery-categories span{padding:7px 9px;border:1px solid #665337;color:#c6ab77;font-size:9px;letter-spacing:.1em;white-space:nowrap}
 @media(max-width:900px){.hero-gallery-head{padding:14px 18px}.hero-gallery-bottom{padding:17px 18px}.hero-gallery-index{display:none}}
 @media(max-width:650px){.hero-gallery-head{font-size:8px;letter-spacing:.1em}.hero-gallery-stage{min-height:180px}.hero-gallery-bottom{display:block}.hero-gallery-bottom h1{font-size:20px}.hero-gallery-categories{justify-content:flex-start;margin-top:15px}.hero-gallery-categories span{font-size:8px}.hero-gallery-fallback{font-size:10px}.hero-gallery-fallback img{width:45px;height:45px}}
+
+/* V2.1: responsive cross-device layout, touch targets and safe areas */
+html{min-width:0;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{min-width:0;overflow-x:clip}
+img,video,canvas,svg{max-width:100%}
+.workspace,.left,.right,.panel,.grid-two>*,.comparison>*,.brain-grid>*,.advisor-grid>*,.advisor-steps>*,.advisor-picker>*{min-width:0}
+pre,textarea,.model-card,.advisor-platform{overflow-wrap:anywhere}
+.top{padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
+.workspace{padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right));grid-template-columns:minmax(320px,440px) minmax(0,1fr)}
+.right-top{min-width:0;justify-content:flex-end}
+.right-top .quiet,.tabs button,.outline,.primary,.mini-btn{min-height:44px}
+input,select,textarea{max-width:100%}
+.hero-gallery-image{height:auto;object-fit:contain}
+@media (pointer:coarse){button,select,input[type="file"]+label,.file-label,.add-ref,.upload,summary{touch-action:manipulation}button,.quiet,.file-label,select,.tabs button{min-height:44px}.reference .delete-ref{min-width:36px;min-height:36px}}
+@media (max-width:1200px){
+ .workspace{grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:14px;padding:16px}
+ .panel{padding:16px}
+ .advisor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .advisor-picker{grid-template-columns:1fr}
+}
+@media (max-width:1024px){
+ .workspace{display:flex;flex-direction:column;gap:0;max-width:900px;margin:0 auto}
+ .left{display:contents}
+ .right{display:contents}
+ .section-label{order:1}
+ .tabs{order:2}
+ .left>.panel{order:3}
+ .right>.hero{order:0;margin-bottom:18px}
+ .right>.panel{order:4}
+ .right>footer{order:5}
+ .top{gap:12px}
+ .brain-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .advisor-picker{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+@media (max-width:700px){
+ .workspace{padding:12px}
+ .top{padding:10px 12px;align-items:center}
+ .right-top{width:100%;justify-content:flex-start;gap:8px}
+ .pill{margin-right:auto}
+ .right-top .quiet{flex:1;text-align:center;white-space:nowrap}
+ .panel{padding:14px;border-radius:9px}
+ .grid-two,.comparison,.advisor-grid,.advisor-steps,.advisor-picker{grid-template-columns:minmax(0,1fr)}
+ .brain-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .hero-gallery-head{padding:12px}
+ .hero-gallery-bottom{padding:14px}
+ .hero-gallery-kicker{letter-spacing:.06em;white-space:normal}
+ .hero-gallery-stage{min-height:0}
+ .hero-gallery-image{max-height:none}
+ .actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .actions .primary{grid-column:1/-1;min-width:0}
+ .ref-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .model-header{flex-wrap:wrap}
+ .model-body{padding:0 10px 12px}
+}
+@media (max-width:380px){
+ .tabs{gap:6px}
+ .tabs button{font-size:11px;padding:10px 7px}
+ .brain-grid,.ref-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .brand small{font-size:7px!important}
+ .pill{font-size:9px;letter-spacing:.04em}
+}
+@media (min-width:1600px){.workspace{max-width:1920px;grid-template-columns:460px minmax(0,1fr);gap:24px}.hero-gallery-image{max-height:640px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
