@@ -1,5 +1,6 @@
 import {BRAINS,CATEGORIES,LOCKS,FIELD_DEFS,createModel,getWarnings,compilePrompt,projectSnapshot,makeRenderPayload} from "./core.mjs";
 import {SPACE_CATALOG,STYLE_OPTIONS,CAMERA_OPTIONS,LIGHTING_OPTIONS,ASPECT_OPTIONS,recommendVisual} from "./design-catalog.mjs";
+import {IMAGE_PLATFORMS,adviseImageWorkflow} from "./image-advisor.mjs";
 const $=id=>document.getElementById(id);
 const vn={
  "Sofa":"Ghế sofa","Armchair":"Ghế đơn","Coffee Table":"Bàn trà","Furniture":"Nội thất","Camera":"Góc máy","Lighting":"Ánh sáng","Architecture":"Kiến trúc","Geometry":"Hình học","Furniture Layout":"Bố trí nội thất","Materials":"Vật liệu","Model Identity":"Nhận diện sản phẩm",
@@ -14,15 +15,15 @@ const liveSettings=()=>({mode:state.mode,space:$("space").value,zone:$("zone").v
 const text=(tag,value,cls)=>{const x=document.createElement(tag);x.textContent=value;if(cls)x.className=cls;return x};
 const control=(tag,{value="",onChange,options=null,placeholder=""}={})=>{const e=document.createElement(tag);if(options){for(const v of options){const o=document.createElement("option");o.value=v;o.textContent=vi(v);e.append(o)}}if(tag==="input")e.type="text";e.value=value;e.placeholder=placeholder;e.addEventListener("input",()=>onChange?.(e.value));return e};
 function inputLabel(label,element){const l=text("label",label);l.append(element);return l}
-function setMode(v){state.mode=v;for(const id of ["create","edit"])$(id+"Tab").classList.toggle("selected",id===v);$("masterHint").textContent=v==="edit"?"Bắt buộc khi chỉnh sửa ảnh hiện trạng":"Không bắt buộc khi tạo ảnh từ văn bản";$("masterLabel").textContent=v==="edit"?"+ TẢI ẢNH GỐC":"+ THÊM ẢNH THAM CHIẾU";$("renderButton").firstChild.textContent=v==="edit"?"CHỈNH SỬA ẢNH ":"TẠO ẢNH "}
-function updateMaster(f){if(state.masterURL)URL.revokeObjectURL(state.masterURL);state.master=f||null;state.masterURL=f?URL.createObjectURL(f):null;$("masterArea").hidden=!f;$("masterPreview").src=state.masterURL||"";$("inputView").hidden=!f;$("inputView").src=state.masterURL||"";$("inputEmpty").hidden=!!f;if(!f)$("masterInput").value=""}
+function setMode(v){state.mode=v;for(const id of ["create","edit"])$(id+"Tab").classList.toggle("selected",id===v);$("masterHint").textContent=v==="edit"?"Bắt buộc khi chỉnh sửa ảnh hiện trạng":"Không bắt buộc khi tạo ảnh từ văn bản";$("masterLabel").textContent=v==="edit"?"+ TẢI ẢNH GỐC":"+ THÊM ẢNH THAM CHIẾU";$("renderButton").firstChild.textContent=v==="edit"?"CHỈNH SỬA ẢNH ":"TẠO ẢNH ";drawAdvisor()}
+function updateMaster(f){if(state.masterURL)URL.revokeObjectURL(state.masterURL);state.master=f||null;state.masterURL=f?URL.createObjectURL(f):null;$("masterArea").hidden=!f;$("masterPreview").src=state.masterURL||"";$("inputView").hidden=!f;$("inputView").src=state.masterURL||"";$("inputEmpty").hidden=!!f;if(!f)$("masterInput").value="";drawAdvisor()}
 function revokeRefs(m){m.references.forEach(r=>r.url&&URL.revokeObjectURL(r.url))}
 function addModel(){const m=createModel();state.models.push(m);state.expanded=m.id;drawModels()}
-function drawModels(){
+function drawModels(){drawAdvisor();
  const holder=$("models");holder.replaceChildren();$("modelCount").textContent=state.models.length+" SẢN PHẨM";
  for(const m of state.models){
   const card=text("article","","model-card"),head=text("div","","model-header");
-  const check=document.createElement("input");check.type="checkbox";check.className="toggle";check.checked=m.selected;check.title="Chọn sản phẩm để áp dụng";check.addEventListener("change",()=>m.selected=check.checked);head.append(check);
+  const check=document.createElement("input");check.type="checkbox";check.className="toggle";check.checked=m.selected;check.title="Chọn sản phẩm để áp dụng";check.addEventListener("change",()=>{m.selected=check.checked;drawAdvisor()});head.append(check);
   const expand=text("button","","expand");const named=text("strong",m.name||m.id),desc=text("small",vi(m.category)+" · "+m.references.length+" ảnh");expand.append(named,desc);expand.addEventListener("click",()=>{state.expanded=state.expanded===m.id?null:m.id;drawModels()});head.append(expand);
   const rm=text("button","×","remove");rm.title="Xóa Model";rm.addEventListener("click",()=>{revokeRefs(m);state.models=state.models.filter(x=>x.id!==m.id);if(state.expanded===m.id)state.expanded=null;drawModels()});head.append(rm);card.append(head);
   const body=text("div","","model-body");body.hidden=state.expanded!==m.id;
@@ -45,6 +46,19 @@ function drawModels(){
   const uploadLabel=text("label","+ THÊM ẢNH","add-ref");const upload=document.createElement("input");upload.type="file";upload.accept="image/png,image/jpeg,image/webp";upload.multiple=true;upload.hidden=true;upload.addEventListener("change",()=>{for(const f of upload.files){if(!["image/jpeg","image/png","image/webp"].includes(f.type))continue;m.references.push({name:f.name,file:f,url:URL.createObjectURL(f)})}drawModels()});uploadLabel.append(upload);refs.append(uploadLabel);body.append(refs);
   card.append(body);holder.append(card);
  }
+}
+function drawAdvisor(){
+ const advice=adviseImageWorkflow(liveSettings());
+ $("advisorSummary").textContent="HG đề xuất: "+advice.reason;
+ $("advisorSteps").replaceChildren(...advice.steps.map((v,i)=>{const step=text("div","","advisor-step");step.append(text("b",String(i+1).padStart(2,"0")),text("span",v));return step}));
+ $("advisorPlatforms").replaceChildren(...IMAGE_PLATFORMS.map(p=>{
+ const card=text("article","","advisor-platform");
+ if(advice.recommendations.includes(p.id))card.classList.add("recommended");
+ const title=text("div","","advisor-title");title.append(text("strong",p.name));
+ if(advice.recommendations.includes(p.id))title.append(text("small","HG ĐỀ XUẤT"));
+ card.append(title,text("p",p.focus),text("small",p.note));
+ const link=text("a","TÌM HIỂU ↗","advisor-link");link.href=p.url;link.target="_blank";link.rel="noopener noreferrer";card.append(link);return card;
+ }));
 }
 function showStatus(msg,error=false){$("renderStatus").textContent=msg;$("renderStatus").style.color=error?"#efa6a0":""}
 function compile(){const c=liveSettings(),p=compilePrompt(c);$("promptOutput").textContent=p;$("warnings").replaceChildren(...getWarnings(c).map(w=>text("p","⚠ "+w)));return p}
@@ -77,7 +91,7 @@ function updateZone(){populate($("zone"),SPACE_CATALOG[$("space").value]||SPACE_
 populate($("style"),STYLE_OPTIONS,false);populate($("camera"),CAMERA_OPTIONS,false);populate($("lighting"),LIGHTING_OPTIONS,false);updateZone();
 for(const [label,value] of ASPECT_OPTIONS){const option=document.createElement("option");option.value=value;option.textContent=label;$("aspect").append(option)}
 $("aspect").addEventListener("change",()=>{$("aspectHint").textContent="Độ phân giải API: "+$("aspect").value.replace("x","×")+(["3:2 Ngang","2:3 Dọc","1:1 Vuông"].includes($("aspect").selectedOptions[0].textContent)?"":" · API chỉ hỗ trợ tỷ lệ gần đúng")});
-$("space").addEventListener("change",updateZone);
+$("space").addEventListener("change",()=>{updateZone();drawAdvisor()});
 for(const b of BRAINS){const card=text("div","","brain");card.append(text("b",String(b.experts.length)),text("small",vi(b.name)));$("brainGrid").append(card);
  const l=text("label","","");const c=document.createElement("input");c.type="checkbox";c.className="toggle";c.value=b.id;c.dataset.brain="true";c.checked=true;l.append(c," "+vi(b.name)+" ("+b.experts.length+")");$("manualExperts").append(l);
 }
@@ -97,4 +111,4 @@ $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)retu
  setMode(v.mode==="edit"?"edit":"create");drawModels();updateMaster(null);showStatus("Đã nhập cấu hình. Vì lý do bảo mật, vui lòng tải lại file ảnh gốc.");}catch(e){showStatus("Không nhập được JSON: "+e.message,true)}finally{e.target.value=""}};
 $("renderButton").onclick=render;
 $("downloadResult").onclick=()=>{if(!state.generated)return;const a=document.createElement("a");a.href=state.generated;a.download="hoanggia-ai-image.png";document.body.append(a);a.click();a.remove()};
-setMode("create");addModel();
+setMode("create");addModel();drawAdvisor();
