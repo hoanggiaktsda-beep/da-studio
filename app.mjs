@@ -9,7 +9,7 @@ const vn={
  "Urban & Master Planning":"Quy hoạch và tổng mặt bằng","Architecture":"Kiến trúc","Interior":"Nội thất","Visual / Cinematic":"Hình ảnh và điện ảnh","Image Engine":"Bộ xử lý hình ảnh","Quality Control":"Kiểm soát chất lượng"
 };
 const vi=v=>vn[v]||v;
-const state={mode:"create",master:null,masterURL:null,models:[],expanded:null,generated:null};
+const state={mode:"create",master:null,masterURL:null,models:[],expanded:null,generated:null,renderController:null};
 const MAX_IMAGE_BYTES=5_000_000;
 const MAX_REQUEST_BYTES=23_000_000;
 const validImage=f=>!!f&&["image/jpeg","image/png","image/webp"].includes(f.type)&&f.size<=MAX_IMAGE_BYTES;
@@ -53,7 +53,7 @@ function drawModels(){drawAdvisor();
 function drawAdvisor(){
  const context=liveSettings(),advice=adviseImageWorkflow(context),choice=resolveImageAI($("imageAI").value,context);
  $("aiSelection").textContent=(choice.automatic?"HG tự chọn cổng kết xuất hỗ trợ: ":"Đã chọn: ")+choice.platform.name+" · "+(choice.canRender?"Có thể tạo ảnh khi cổng OpenAI được cấu hình.":"Chưa tích hợp kết xuất trực tiếp; sử dụng prompt trên nền tảng ngoài.");
- $("renderButton").disabled=!choice.canRender;
+ $("renderButton").disabled=!choice.canRender||!!state.renderController;
  $("renderButton").title=choice.canRender?"Tạo ảnh qua cổng OpenAI đã cấu hình":"AI đã chọn chưa hỗ trợ tạo ảnh trực tiếp trên website";
 
  $("advisorSummary").textContent="HG đề xuất: "+advice.reason;
@@ -86,17 +86,19 @@ async function render(){
  if(refs.length>16){showStatus("Chỉ hỗ trợ tối đa 16 ảnh trong một lần gọi API.",true);return}
  const estimatedBytes=JSON.stringify(makeRenderPayload(c,prompt,[])).length+refs.reduce((n,r)=>n+Math.ceil(r.file.size/3)*4+128,0);
  if(estimatedBytes>MAX_REQUEST_BYTES){showStatus("Tổng dung lượng ảnh vượt giới hạn gateway (~23 MB sau mã hóa). Hãy giảm số ảnh hoặc nén ảnh.",true);return}
+ const controller=new AbortController();state.renderController=controller;
  $("renderButton").disabled=true;showStatus("Đang gửi yêu cầu tới cổng AI…");
  try{
   const images=[];for(const r of refs)images.push({image_url:await readDataURL(r.file),source:r.model,order:r.index});
-  const response=await fetch(endpoint+"/render",{method:"POST",headers:{"Content-Type":"application/json","X-Studio-Token":token},body:JSON.stringify(makeRenderPayload(c,prompt,images))});
+  const response=await fetch(endpoint+"/render",{method:"POST",headers:{"Content-Type":"application/json","X-Studio-Token":token},body:JSON.stringify(makeRenderPayload(c,prompt,images)),signal:controller.signal});
   const result=await response.json();
+  if(controller.signal.aborted)return;
   if(!response.ok)throw new Error(result.error||"Gateway error "+response.status);
   if(!result.image||typeof result.image!=="string")throw new Error("Gateway chưa trả về ảnh hợp lệ.");
   state.generated="data:"+(result.mime||"image/png")+";base64,"+result.image;
   $("resultView").src=state.generated;$("resultView").hidden=false;$("resultEmpty").hidden=true;$("downloadResult").hidden=false;
   showStatus("Đã nhận ảnh từ AI.");
- }catch(e){showStatus("Không tạo được ảnh: "+(e.message||String(e)),true)}finally{drawAdvisor()}
+ }catch(e){if(!controller.signal.aborted)showStatus("Không tạo được ảnh: "+(e.message||String(e)),true)}finally{if(state.renderController===controller)state.renderController=null;drawAdvisor()}
 }
 function populate(select,values,keep){const old=keep?select.value:null;select.replaceChildren();for(const v of values){const option=document.createElement("option");option.value=v;option.textContent=vi(v);select.append(option)}if(old&&values.includes(old))select.value=old}
 function updateZone(){populate($("zone"),SPACE_CATALOG[$("space").value]||SPACE_CATALOG["Nội thất"],false)}
@@ -137,7 +139,7 @@ $("downloadPrompt").onclick=()=>downloadText("hoanggia-prompt.txt",compile());
 $("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"2.0",...projectSnapshot(liveSettings())},null,2),"application/json");
 $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;const v=JSON.parse(await f.text());if(!v||typeof v!=="object"||!Array.isArray(v.models))throw Error("Sai cấu trúc JSON");
  if(v.models.length>200)throw Error("Dự án có quá 200 Model");
- for(const item of v.models)if(!item||typeof item!=="object"||Array.isArray(item))throw Error("Model không hợp lệ");for(const m of state.models)revokeRefs(m);state.models=v.models.map(()=>null).map((_,i)=>{const o=v.models[i],m=createModel();return {...m,...o,id:m.id,references:[],properties:o.properties&&typeof o.properties==="object"&&!Array.isArray(o.properties)?o.properties:{},notes:(o.notes||"")+(o.references?.length?" [Cần tải lại ảnh gốc sau khi nhập JSON.]":"")}});if(typeof v.space==="string"&&SPACE_CATALOG[v.space]){$("space").value=v.space;updateZone()}
+ for(const item of v.models)if(!item||typeof item!=="object"||Array.isArray(item))throw Error("Model không hợp lệ");if(state.renderController){state.renderController.abort();state.renderController=null}for(const m of state.models)revokeRefs(m);state.models=v.models.map(()=>null).map((_,i)=>{const o=v.models[i],m=createModel();return {...m,...o,id:m.id,references:[],properties:o.properties&&typeof o.properties==="object"&&!Array.isArray(o.properties)?o.properties:{},notes:(o.notes||"")+(o.references?.length?" [Cần tải lại ảnh gốc sau khi nhập JSON.]":"")}});if(typeof v.space==="string"&&SPACE_CATALOG[v.space]){$("space").value=v.space;updateZone()}
  for(const key of fields){if(typeof v[key]==="string"&&[...$(key).options||[]].length){if([...$(key).options].some(x=>x.value===v[key]))$(key).value=v[key]}else if(key==="brief"&&typeof v[key]==="string")$(key).value=v[key]}
  if(typeof v.furnitureBrand==="string"){const known=[...$("furnitureBrand").options].some(o=>o.value===v.furnitureBrand);if(!known&&v.furnitureBrand){$("furnitureBrand").value="Thương hiệu khác (nhập tên)";$("customBrand").value=v.furnitureBrand;$("customBrandWrap").hidden=false}else{$("furnitureBrand").value=v.furnitureBrand||"Không áp dụng";$("customBrand").value="";$("customBrandWrap").hidden=true}}
  if(Array.isArray(v.chosenBrains)){for(const cb of document.querySelectorAll("[data-brain]"))cb.checked=v.chosenBrains.includes(cb.value)}
@@ -151,6 +153,7 @@ $("renderButton").onclick=render;
 $("downloadResult").onclick=()=>{if(!state.generated)return;const a=document.createElement("a");a.href=state.generated;a.download="hoanggia-ai-image.png";document.body.append(a);a.click();a.remove()};
 function startNewProject(){
  if(!window.confirm("Tạo dự án mới? Prompt, Model, ảnh tham chiếu và kết quả hiện tại sẽ bị xóa. Hãy xuất dự án hoặc tải kết quả trước khi tiếp tục."))return;
+ if(state.renderController){state.renderController.abort();state.renderController=null}
  for(const m of state.models)revokeRefs(m);
  state.models=[];state.expanded=null;state.generated=null;
  updateMaster(null);
