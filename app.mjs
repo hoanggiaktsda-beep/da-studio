@@ -43,13 +43,13 @@ function drawModels(){drawAdvisor();
   const reftitle=text("div","ẢNH THAM CHIẾU RIÊNG · "+m.references.length,"eyebrow");body.append(reftitle);
   const refs=text("div","","ref-grid");
   m.references.forEach((r,i)=>{const tile=text("div","","reference");if(r.url){const im=document.createElement("img");im.src=r.url;im.alt=m.name+" reference "+(i+1);tile.append(im)}tile.append(text("small",r.name));const del=text("button","×","delete-ref");del.title="Xóa ảnh";del.addEventListener("click",()=>{if(r.url)URL.revokeObjectURL(r.url);m.references.splice(i,1);drawModels()});tile.append(del);refs.append(tile)});
-  const uploadLabel=text("label","+ THÊM ẢNH","add-ref");const upload=document.createElement("input");upload.type="file";upload.accept="image/png,image/jpeg,image/webp";upload.multiple=true;upload.hidden=true;upload.addEventListener("change",()=>{for(const f of upload.files){if(!["image/jpeg","image/png","image/webp"].includes(f.type))continue;m.references.push({name:f.name,file:f,url:URL.createObjectURL(f)})}drawModels()});uploadLabel.append(upload);refs.append(uploadLabel);body.append(refs);
+  const uploadLabel=text("label","+ THÊM ẢNH","add-ref");const upload=document.createElement("input");upload.type="file";upload.accept="image/png,image/jpeg,image/webp";upload.multiple=true;upload.hidden=true;upload.addEventListener("change",()=>{for(const f of upload.files){if(!["image/jpeg","image/png","image/webp"].includes(f.type)||f.size>8_000_000)continue;m.references.push({name:f.name,file:f,url:URL.createObjectURL(f)})}drawModels()});uploadLabel.append(upload);refs.append(uploadLabel);body.append(refs);
   card.append(body);holder.append(card);
  }
 }
 function drawAdvisor(){
  const context=liveSettings(),advice=adviseImageWorkflow(context),choice=resolveImageAI($("imageAI").value,context);
- $("aiSelection").textContent=(choice.automatic?"HG đề xuất: ":"Đã chọn: ")+choice.platform.name+" · "+(choice.canRender?"Có thể tạo ảnh khi cổng OpenAI được cấu hình.":"Chưa tích hợp kết xuất trực tiếp; sử dụng prompt trên nền tảng ngoài.");
+ $("aiSelection").textContent=(choice.automatic?"HG tự chọn cổng kết xuất hỗ trợ: ":"Đã chọn: ")+choice.platform.name+" · "+(choice.canRender?"Có thể tạo ảnh khi cổng OpenAI được cấu hình.":"Chưa tích hợp kết xuất trực tiếp; sử dụng prompt trên nền tảng ngoài.");
  $("renderButton").disabled=!choice.canRender;
  $("renderButton").title=choice.canRender?"Tạo ảnh qua cổng OpenAI đã cấu hình":"AI đã chọn chưa hỗ trợ tạo ảnh trực tiếp trên website";
 
@@ -71,6 +71,7 @@ async function readDataURL(f){return await new Promise((resolve,reject)=>{const 
 async function render(){
  const c=liveSettings(),prompt=compile(),w=getWarnings(c);
  if(!resolveImageAI(c.imageAI,c).canRender){showStatus("AI đã chọn chưa được kết nối trực tiếp. Hãy sao chép prompt và mở nền tảng AI tương ứng.",true);return}
+ if(state.master&&(!["image/jpeg","image/png","image/webp"].includes(state.master.type)||state.master.size>8_000_000)){showStatus("Ảnh gốc phải là JPG/PNG/WebP và không quá 8 MB.",true);return}
  if(c.mode==="edit"&&!state.master){showStatus("Cần tải ảnh gốc trước khi chỉnh sửa.",true);return}
  if(w.some(x=>x.startsWith("Xung đột")||x.includes("Tối đa 16"))){showStatus("Có xung đột cần giải quyết trước khi tạo ảnh.",true);return}
  const endpoint=$("gateway").value.trim().replace(/\/+$/,"");const token=$("studioToken").value.trim();
@@ -78,6 +79,7 @@ async function render(){
  if(!(/^https:\/\//.test(endpoint)||/^http:\/\/localhost(?::\d+)?$/.test(endpoint))){showStatus("Cổng AI phải dùng HTTPS (hoặc localhost).",true);return}
  const refs=[];if(state.master)refs.push({file:state.master,model:"MASTER",index:0});
  for(const m of state.models.filter(m=>m.selected)){m.references.forEach((r,i)=>{if(r.file)refs.push({file:r.file,model:m.id,index:i+1})})}
+ if(refs.some(r=>!["image/jpeg","image/png","image/webp"].includes(r.file.type)||r.file.size>8_000_000)){showStatus("Mỗi ảnh tham chiếu phải là JPG/PNG/WebP và không quá 8 MB.",true);return}
  if(refs.length>16){showStatus("Chỉ hỗ trợ tối đa 16 ảnh trong một lần gọi API.",true);return}
  $("renderButton").disabled=true;showStatus("Đang gửi yêu cầu tới cổng AI…");
  try{
@@ -89,7 +91,7 @@ async function render(){
   state.generated="data:"+(result.mime||"image/png")+";base64,"+result.image;
   $("resultView").src=state.generated;$("resultView").hidden=false;$("resultEmpty").hidden=true;$("downloadResult").hidden=false;
   showStatus("Đã nhận ảnh từ AI.");
- }catch(e){showStatus("Không tạo được ảnh: "+(e.message||String(e)),true)}finally{$("renderButton").disabled=false}
+ }catch(e){showStatus("Không tạo được ảnh: "+(e.message||String(e)),true)}finally{drawAdvisor()}
 }
 function populate(select,values,keep){const old=keep?select.value:null;select.replaceChildren();for(const v of values){const option=document.createElement("option");option.value=v;option.textContent=vi(v);select.append(option)}if(old&&values.includes(old))select.value=old}
 function updateZone(){populate($("zone"),SPACE_CATALOG[$("space").value]||SPACE_CATALOG["Nội thất"],false)}
@@ -121,11 +123,11 @@ $("expertMode").onchange=()=>{$("manualExperts").hidden=$("expertMode").value!==
 $("compile").onclick=compile;
 $("copyPrompt").onclick=async()=>{await navigator.clipboard.writeText(compile());showStatus("Đã sao chép prompt.")};
 $("downloadPrompt").onclick=()=>downloadText("hoanggia-prompt.txt",compile());
-$("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"1.8",...projectSnapshot(liveSettings())},null,2),"application/json");
+$("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"2.0",...projectSnapshot(liveSettings())},null,2),"application/json");
 $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;const v=JSON.parse(await f.text());if(!Array.isArray(v.models))throw Error("Sai cấu trúc JSON");for(const m of state.models)revokeRefs(m);state.models=v.models.slice(0,200).map(()=>null).map((_,i)=>{const o=v.models[i],m=createModel();return {...m,...o,id:m.id,references:[],properties:o.properties&&typeof o.properties==="object"?o.properties:{},notes:(o.notes||"")+(o.references?.length?" [Cần tải lại ảnh gốc sau khi nhập JSON.]":"")}});if(typeof v.space==="string"&&SPACE_CATALOG[v.space]){$("space").value=v.space;updateZone()}
  for(const key of fields){if(typeof v[key]==="string"&&[...$(key).options||[]].length){if([...$(key).options].some(x=>x.value===v[key]))$(key).value=v[key]}else if(key==="brief"&&typeof v[key]==="string")$(key).value=v[key]}
  if(v.aspect){const option=[...$("aspect").options].find(x=>x.textContent===v.aspect);if(option)$("aspect").selectedIndex=option.index}updateRenderHints()
- setMode(v.mode==="edit"?"edit":"create");drawModels();updateMaster(null);showStatus("Đã nhập cấu hình. Vì lý do bảo mật, vui lòng tải lại file ảnh gốc.");}catch(e){showStatus("Không nhập được JSON: "+e.message,true)}finally{e.target.value=""}};
+ setMode(v.mode==="edit"?"edit":"create");drawModels();updateMaster(null);updateRenderHints();showStatus("Đã nhập cấu hình. Vì lý do bảo mật, vui lòng tải lại file ảnh gốc.");}catch(e){showStatus("Không nhập được JSON: "+e.message,true)}finally{e.target.value=""}};
 $("renderButton").onclick=render;
 $("downloadResult").onclick=()=>{if(!state.generated)return;const a=document.createElement("a");a.href=state.generated;a.download="hoanggia-ai-image.png";document.body.append(a);a.click();a.remove()};
 setMode("create");addModel();drawAdvisor();
