@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" role="img" aria-labelledby="title desc">
+<title id="title">HOANGGIA AI</title>
+<desc id="desc">Geometric H and A architectural monogram with a small four-pane window detail.</desc>
+<rect width="720" height="220" fill="#070807"/>
+<g transform="translate(54 28)">
+  <path d="M0 18H48V142H0Z" fill="#dedbd2"/>
+  <path d="M48 72H112V18H160L238 142H184L112 34V142H48Z" fill="#d0cbc0"/>
+  <path d="M112 18V142" stroke="#f1eee6" stroke-width="1.5" opacity=".8"/>
+  <path d="M-20 142H238" stroke="#a9966d" stroke-width="1.2" opacity=".7"/>
+  <path d="M112 -18V164" stroke="#8f8a7d" stroke-width="1.2" opacity=".55"/>
+  <path d="M112 18L184 142" stroke="#e0b96e" stroke-width="3" opacity=".95"/>
+  <rect x="129" y="105" width="10" height="10" fill="#dcb66d"/>
+  <rect x="143" y="105" width="10" height="10" fill="#dcb66d"/>
+  <rect x="129" y="119" width="10" height="10" fill="#dcb66d"/>
+  <rect x="143" y="119" width="10" height="10" fill="#dcb66d"/>
+</g>
+<g transform="translate(330 66)" fill="#f1eee7" font-family="Arial,Helvetica,sans-serif">
+  <text x="0" y="36" font-size="42" font-weight="700" letter-spacing="8">HOANGGIA</text>
+  <text x="1" y="84" font-size="40" font-weight="700" letter-spacing="5" fill="#dfbd78">AI</text>
+  <text x="1" y="116" font-size="11" font-weight="700" letter-spacing="4.5" fill="#8c918a">INTERIOR DESIGN PROMPT ENGINE</text>
+</g>
+</svg>
