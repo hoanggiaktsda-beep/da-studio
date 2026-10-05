@@ -148,6 +148,8 @@ $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)retu
  for(const key of fields){if(typeof v[key]==="string"&&[...$(key).options||[]].length){if([...$(key).options].some(x=>x.value===v[key]))$(key).value=v[key]}else if(key==="brief"&&typeof v[key]==="string")$(key).value=v[key]}
  if(typeof v.furnitureBrand==="string"){const known=[...$("furnitureBrand").options].some(o=>o.value===v.furnitureBrand);if(!known&&v.furnitureBrand){$("furnitureBrand").value="Thương hiệu khác (nhập tên)";$("customBrand").value=v.furnitureBrand;$("customBrandWrap").hidden=false}else{$("furnitureBrand").value=v.furnitureBrand||"Không áp dụng";$("customBrand").value="";$("customBrandWrap").hidden=true}}
  for(const id of contextFields){if(typeof v[id]==="string"){const el=$(id);if(el.tagName==="SELECT"){if([...el.options].some(o=>o.value===v[id]))el.value=v[id]}else el.value=v[id]}}
+ for(const id of ["roomWidthMm","roomDepthMm","clearanceMm","requiredClearanceMm","projectStandard","layoutMinimumGapMm"])$(id).value=(typeof v[id]==="string"||typeof v[id]==="number")?String(v[id]):"";
+ for(const [id,key] of [["layoutItemsJson","layoutItems"],["layoutObstaclesJson","layoutObstacles"],["layoutDoorsJson","layoutDoors"]])$(id).value=Array.isArray(v[key])?JSON.stringify(v[key],null,2):"";
  $("specificDateTime").checked=v.specificDateTime===true;$("dateTimeFields").hidden=!$("specificDateTime").checked;
  for(const id of ["day","month","year","localTime"])$(id).value=v[id]??"";
  $("contextNotesLabel").hidden=![$("settingArea").value,$("surroundings").value].includes("Khác (mô tả)");
@@ -172,6 +174,7 @@ function startNewProject(){
  updateMaster(null);
  $("space").selectedIndex=0;updateZone();
  for(const id of ["style","camera","lighting","aspect","imageAI","expertMode","outputType","photoDirection"])$(id).selectedIndex=0;
+ for(const id of ["roomWidthMm","roomDepthMm","clearanceMm","requiredClearanceMm","projectStandard","layoutMinimumGapMm","layoutItemsJson","layoutObstaclesJson","layoutDoorsJson"])$(id).value="";
  $("quality").value="medium";$("brief").value="";$("furnitureBrand").value="Không áp dụng";$("customBrand").value="";$("customBrandWrap").hidden=true;
  for(const c of document.querySelectorAll("[data-brain]"))c.checked=true;
  for(const c of document.querySelectorAll("[data-lock]"))c.checked=["Architecture","Geometry","Camera"].includes(c.value);
