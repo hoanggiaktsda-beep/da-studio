@@ -1,4 +1,4 @@
-import {recommendVisual} from "./design-catalog.mjs";
+import {recommendVisual,resolvePhotoDirection} from "./design-catalog.mjs";
 export const BRAINS=[
  {id:"urban",name:"Urban & Master Planning",experts:["Urban Planning Director","Regional Planning","Master Planning","Urban Morphology","Transport & Mobility","Landscape Urbanist","Environmental Planner","Infrastructure Planner","Smart City Strategist","Urban Visualization"]},
  {id:"architecture",name:"Architecture",experts:["Chief Architect","Concept Architect","Building Typology","Facade Design","Structural Logic","Building Physics","Architectural Materials","Architectural Landscape","Preservation"]},
@@ -58,6 +58,9 @@ export function compilePrompt(c){
  "ASPECT RULE: Preserve the requested composition. When the image API does not support the exact requested aspect, use the nearest supported size and warn the user; do not falsely label the output aspect.",
  "DESIGN BRIEF: "+(c.brief?.trim()||"Produce a coherent professional architecture/interior design."),
  "INTERIOR BRAND DIRECTION: "+(c.furnitureBrand||"Không áp dụng"),
+ "OUTPUT MEDIUM: "+(c.outputType||"HG tự đề xuất"),
+ "PHOTOGRAPHY DIRECTOR: "+resolvePhotoDirection(c).selected,
+ "PHOTOGRAPHY QUALITY GUIDANCE: "+resolvePhotoDirection(c).guide,
  "BRAND RULE: Brand is a design reference only. Do not claim official products, exact catalog models, verified authenticity or protected brand identity without supplied visual/product evidence. Per-Model references and verified product identity override global inspiration.",
  "EXPERT ORCHESTRATOR: "+c.expertMode,
  "ACTIVE BRAINS: "+brains.map(b=>b.name+" ("+b.experts.length+" expert roles)").join("; "),
