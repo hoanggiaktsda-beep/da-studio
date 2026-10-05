@@ -1,8 +1,9 @@
 import {BRAINS,CATEGORIES,LOCKS,FIELD_DEFS,createModel,getWarnings,compilePrompt,projectSnapshot,makeRenderPayload} from "./core.mjs";
+import {SPACE_CATALOG,STYLE_OPTIONS,CAMERA_OPTIONS,LIGHTING_OPTIONS,ASPECT_OPTIONS,recommendVisual} from "./design-catalog.mjs";
 const $=id=>document.getElementById(id);
 const state={mode:"create",master:null,masterURL:null,models:[],expanded:null,generated:null};
-const fields=["space","style","brief","size","quality","expertMode"];
-const liveSettings=()=>({mode:state.mode,space:$("space").value,style:$("style").value,brief:$("brief").value,size:$("size").value,quality:$("quality").value,expertMode:$("expertMode").value,chosenBrains:[...document.querySelectorAll("[data-brain]:checked")].map(x=>x.value),locks:[...document.querySelectorAll("[data-lock]:checked")].map(x=>x.value),masterImage:state.master,models:state.models});
+const fields=["space","zone","style","camera","lighting","aspect","brief","quality","expertMode"];
+const liveSettings=()=>({mode:state.mode,space:$("space").value,zone:$("zone").value,style:$("style").value,camera:$("camera").value,lighting:$("lighting").value,aspect:$("aspect").selectedOptions[0]?.textContent||"3:2 Ngang",brief:$("brief").value,size:$("aspect").value,quality:$("quality").value,expertMode:$("expertMode").value,chosenBrains:[...document.querySelectorAll("[data-brain]:checked")].map(x=>x.value),locks:[...document.querySelectorAll("[data-lock]:checked")].map(x=>x.value),masterImage:state.master,models:state.models});
 const text=(tag,value,cls)=>{const x=document.createElement(tag);x.textContent=value;if(cls)x.className=cls;return x};
 const control=(tag,{value="",onChange,options=null,placeholder=""}={})=>{const e=document.createElement(tag);if(options){for(const v of options){const o=document.createElement("option");o.value=v;o.textContent=v;e.append(o)}}if(tag==="input")e.type="text";e.value=value;e.placeholder=placeholder;e.addEventListener("input",()=>onChange?.(e.value));return e};
 function inputLabel(label,element){const l=text("label",label);l.append(element);return l}
@@ -64,6 +65,12 @@ async function render(){
   showStatus("Đã nhận ảnh tạo từ AI.");
  }catch(e){showStatus("Render thất bại: "+(e.message||String(e)),true)}finally{$("renderButton").disabled=false}
 }
+function populate(select,values,keep){const old=keep?select.value:null;select.replaceChildren();for(const v of values){const option=document.createElement("option");option.value=v;option.textContent=v;select.append(option)}if(old&&values.includes(old))select.value=old}
+function updateZone(){populate($("zone"),SPACE_CATALOG[$("space").value]||SPACE_CATALOG["Nội thất"],false)}
+populate($("style"),STYLE_OPTIONS,false);populate($("camera"),CAMERA_OPTIONS,false);populate($("lighting"),LIGHTING_OPTIONS,false);updateZone();
+for(const [label,value] of ASPECT_OPTIONS){const option=document.createElement("option");option.value=value;option.textContent=label;$("aspect").append(option)}
+$("aspect").addEventListener("change",()=>{$("aspectHint").textContent="Độ phân giải API: "+$("aspect").value.replace("x","×")+(["3:2 Ngang","2:3 Dọc","1:1 Vuông"].includes($("aspect").selectedOptions[0].textContent)?"":" · API chỉ hỗ trợ tỷ lệ gần đúng")});
+$("space").addEventListener("change",updateZone);
 for(const b of BRAINS){const card=text("div","","brain");card.append(text("b",String(b.experts.length)),text("small",b.name));$("brainGrid").append(card);
  const l=text("label","","");const c=document.createElement("input");c.type="checkbox";c.className="toggle";c.value=b.id;c.dataset.brain="true";c.checked=true;l.append(c," "+b.name+" ("+b.experts.length+")");$("manualExperts").append(l);
 }
@@ -78,6 +85,7 @@ $("copyPrompt").onclick=async()=>{await navigator.clipboard.writeText(compile())
 $("downloadPrompt").onclick=()=>downloadText("hoanggia-prompt.txt",compile());
 $("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"1.4",...projectSnapshot(liveSettings())},null,2),"application/json");
 $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;const v=JSON.parse(await f.text());if(!Array.isArray(v.models))throw Error("Sai cấu trúc JSON");for(const m of state.models)revokeRefs(m);state.models=v.models.slice(0,200).map(()=>null).map((_,i)=>{const o=v.models[i],m=createModel();return {...m,...o,id:m.id,references:[],properties:o.properties&&typeof o.properties==="object"?o.properties:{},notes:(o.notes||"")+(o.references?.length?" [Cần tải lại ảnh gốc sau khi nhập JSON.]":"")}});for(const key of fields){if(typeof v[key]==="string"&&[...$(key).options||[]].length){if([...$(key).options].some(x=>x.value===v[key]))$(key).value=v[key]}else if(key==="brief"&&typeof v[key]==="string")$(key).value=v[key]}
+ if(v.aspect){const option=[...$("aspect").options].find(x=>x.textContent===v.aspect);if(option)$("aspect").selectedIndex=option.index}
  setMode(v.mode==="edit"?"edit":"create");drawModels();updateMaster(null);showStatus("Đã nhập cấu hình. Vì lý do bảo mật, vui lòng tải lại file ảnh gốc.");}catch(e){showStatus("Không nhập được JSON: "+e.message,true)}finally{e.target.value=""}};
 $("renderButton").onclick=render;
 $("downloadResult").onclick=()=>{if(!state.generated)return;const a=document.createElement("a");a.href=state.generated;a.download="hoanggia-ai-image.png";document.body.append(a);a.click();a.remove()};
