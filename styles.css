@@ -187,3 +187,10 @@ input,select,textarea{max-width:100%}
 @media(max-width:700px){.photo-director{padding:12px;margin:12px 0}}
 
 .site-context{margin:16px 0;padding:13px;border:1px solid rgba(197,163,104,.28);border-radius:9px;background:rgba(197,163,104,.035)}.site-context summary{cursor:pointer;color:#cfae70;font-size:11px;font-weight:700;letter-spacing:.09em;line-height:1.6}.site-context summary small{display:block;font-size:10px;font-weight:400;letter-spacing:0;color:#9b9b9b}.site-context label{display:block;margin-top:13px}.site-context .grid-two{margin-top:0}.site-context input:not([type=checkbox]),.site-context select{width:100%;min-width:0}.site-context .context-check{display:flex;gap:8px;align-items:center;line-height:1.4}.site-context .context-check input{width:auto;flex:none}.site-context .hint{margin:12px 0 0;line-height:1.6}@media(max-width:700px){.site-context{padding:12px}.site-context .grid-two{grid-template-columns:minmax(0,1fr)}}
+
+/* Design AI embedded view: keep full creator controls, hide standalone chrome. */
+html.embed-create .top{display:none}
+html.embed-create .workspace{padding-top:0}
+html.embed-create .tabs{display:none}
+html.embed-create footer{display:none}
+html.embed-create body{margin:0}
