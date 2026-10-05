@@ -181,3 +181,7 @@ input,select,textarea{max-width:100%}
 @media(max-width:700px){.top{padding:10px 12px;flex-wrap:wrap}.right-top{width:auto;max-width:100%;margin-left:auto;justify-content:flex-end;gap:5px}.right-top .quiet,.right-top .file-label{flex:0 0 auto;padding-inline:8px}.right-top .pill{margin:0}.brand-logo{width:36px;height:36px}.brand small{letter-spacing:.1em}}
 @media(max-width:520px){.top{gap:8px}.right-top{width:100%;justify-content:flex-end}.right-top .pill{margin-right:auto}.right-top .quiet,.right-top .file-label{flex:0 0 auto}}
 @media(max-width:350px){.right-top{gap:4px}.right-top .pill-label{display:none}.right-top .pill{padding-inline:9px}.right-top .quiet,.right-top .file-label{font-size:10px;padding-inline:7px}}
+
+.photo-director{margin:18px 0 14px;padding:15px;border:1px solid rgba(197,163,104,.3);border-radius:10px;background:linear-gradient(135deg,rgba(197,163,104,.065),transparent 65%)}
+.photo-director .panel-heading{margin-bottom:12px}.photo-director label{display:block;margin:10px 0}.photo-director select{width:100%;max-width:100%}.photo-director .hint{margin:10px 0 0;line-height:1.6}
+@media(max-width:700px){.photo-director{padding:12px;margin:12px 0}}
