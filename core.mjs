@@ -1,3 +1,4 @@
+import {recommendVisual} from "./design-catalog.mjs";
 export const BRAINS=[
  {id:"urban",name:"Urban & Master Planning",experts:["Urban Planning Director","Regional Planning","Master Planning","Urban Morphology","Transport & Mobility","Landscape Urbanist","Environmental Planner","Infrastructure Planner","Smart City Strategist","Urban Visualization"]},
  {id:"architecture",name:"Architecture",experts:["Chief Architect","Concept Architect","Building Typology","Facade Design","Structural Logic","Building Physics","Architectural Materials","Architectural Landscape","Preservation"]},
@@ -32,7 +33,9 @@ export function getWarnings(c){
  if(c.mode==="edit"&&!c.masterImage)w.push("Image Editor cần Master Image trước khi render.");
  if(!c.brief?.trim())w.push("Chưa có mô tả thiết kế — AI sẽ dựa trên phong cách đã chọn.");
  if(!uniqueModelID(c.models))w.push("Model ID bị trùng.");
- const active=c.models.filter(m=>m.selected);
+ const active=c.models.filter(m=>m.selected); 
+ if(c.mode==="edit"&&c.locks.includes("Camera")&&c.camera&&c.camera!=="HG tự đề xuất"&&c.camera!=="Giữ nguyên camera ảnh gốc")w.push("Xung đột: Camera Lock đang bật nhưng góc camera yêu cầu thay đổi."); 
+ if(c.mode==="edit"&&c.locks.includes("Lighting")&&c.lighting&&c.lighting!=="HG tự đề xuất"&&c.lighting!=="Giữ nguyên ánh sáng ảnh gốc")w.push("Xung đột: Lighting Lock đang bật nhưng ánh sáng yêu cầu thay đổi.");
  if(active.length&&c.mode==="edit"&&active.some(m=>!m.target?.trim()))w.push("Có Model chưa ghi rõ đối tượng/vị trí cần thay thế.");
  if(active.some(m=>!m.references?.length))w.push("Có Model chưa có ảnh tham chiếu. AI chỉ sử dụng mô tả.");
  const refs=(c.masterImage?1:0)+active.reduce((sum,m)=>sum+(m.references?.length||0),0);
@@ -49,7 +52,10 @@ export function compilePrompt(c){
  "HOANGGIA AI — DESIGN INTELLIGENCE ENGINE V1.4",
  "ROLE: Professional architecture, urban planning, interior design and photorealistic visual production.",
  "TASK: "+(c.mode==="edit"?"EDIT EXISTING MASTER IMAGE":"CREATE NEW IMAGE"),
- "SPACE: "+c.space,"STYLE: "+c.style,"ASPECT / SIZE: "+c.size,"QUALITY: "+c.quality,
+ "SPACE: "+c.space,"SPECIFIC ZONE: "+(c.zone==="HG tự đề xuất"?recommendVisual(c).zone:(c.zone||"Not specified")),"STYLE: "+(c.style==="HG tự đề xuất"?recommendVisual(c).style:c.style),"REQUESTED ASPECT: "+(c.aspect||"3:2 Ngang"),"API RENDER SIZE: "+c.size,"QUALITY: "+c.quality,
+ "CAMERA: "+(c.camera==="HG tự đề xuất"?recommendVisual(c).camera:(c.camera||"Eye Level")),
+ "LIGHTING: "+(c.lighting==="HG tự đề xuất"?recommendVisual(c).lighting:(c.lighting||"Natural Daylight")),
+ "ASPECT RULE: Preserve the requested composition. When the image API does not support the exact requested aspect, use the nearest supported size and warn the user; do not falsely label the output aspect.",
  "DESIGN BRIEF: "+(c.brief?.trim()||"Produce a coherent professional architecture/interior design."),
  "EXPERT ORCHESTRATOR: "+c.expertMode,
  "ACTIVE BRAINS: "+brains.map(b=>b.name+" ("+b.experts.length+" expert roles)").join("; "),
