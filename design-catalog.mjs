@@ -19,7 +19,7 @@ export const FURNITURE_BRANDS=[
  ["Bếp & Phòng tắm",["Boffi","Bulthaup","Poggenpohl","SieMatic","Valcucine","Arclinea","Dada","Gaggenau","Liebherr","Gessi","Antonio Lupi","Agape","Duravit","Villeroy & Boch"]]
 ];
 
-export const OUTPUT_TYPES=[
+export const OUTPUT_TYPES=
  ["HG tự đề xuất","Hình ảnh thực tế — Photorealistic","Ảnh chụp kiến trúc chuyên nghiệp — Architectural Photography","Ảnh chụp nội thất tạp chí — Editorial Interior Photography","Hình ảnh 3D — Photorealistic ArchViz","Render 3D — 3ds Max + Corona Renderer","Render 3D — 3ds Max + V-Ray","Render 3D — SketchUp + V-Ray","Render 3D — SketchUp + Enscape","Render 3D — D5 Render","Render 3D — Lumion","Render 3D — Twinmotion","Render 3D — Blender + Cycles","Render 3D — Unreal Engine","Hình ảnh 3D — Concept Design","Hình ảnh 3D — Clay / trắng vật liệu","Hình ảnh điện ảnh — Cinematic","Hình ảnh tạp chí — Editorial","Ảnh sản phẩm — Studio / Commercial","Tranh phác thảo — Architectural Sketch","Bản vẽ nét — Line Art","Tranh màu nước — Watercolor","Tranh gouache — Gouache Painting","Tranh sơn dầu — Oil Painting","Tranh chì — Pencil Drawing","Tranh marker — Marker Rendering","Ảnh cắt ghép — Architectural Collage","Sơ đồ ý tưởng — Concept Diagram"];
 export const PHOTO_DIRECTIONS=["HG tự đề xuất","Ảnh kiến trúc thực tế — tự nhiên","Tạp chí kiến trúc cao cấp","Ảnh nội thất đời sống chân thực","Ảnh bất động sản chuyên nghiệp","Ảnh sản phẩm nội thất","Ánh sáng ban ngày trung tính","Ánh sáng chiều tự nhiên","Không gian đêm với đèn thực tế","Chi tiết vật liệu cận cảnh"];
 export function resolvePhotoDirection(c){
