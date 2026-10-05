@@ -55,3 +55,22 @@ button:hover,.quiet:hover{filter:brightness(1.13)}
 @media(max-width:1250px){.hero{grid-template-columns:minmax(0,1.6fr) minmax(190px,.65fr)}.hero-copy{padding:23px 26px 18px}.hero-art{padding:24px}.hero h1{font-size:clamp(31px,3.2vw,46px)}}
 @media(max-width:800px){.hero{grid-template-columns:1fr;min-height:0}.hero-copy{padding:26px}.hero-content{padding:30px 0}.hero-art{display:none}.hero h1{font-size:clamp(32px,6vw,44px)}}
 @media(max-width:450px){.hero-copy{padding:20px}.hero-kicker{font-size:8px;gap:7px;letter-spacing:.11em}.hero-kicker-line{width:14px}.hero-overline{font-size:9px}.hero h1{font-size:32px}.hero p{font-size:12px}.hero-footer{font-size:8px}}
+
+/* Image technology advisor */
+.advisor-summary{border-left:2px solid #c9a86a;background:#c9a86a0a;padding:12px 14px;font-size:12px;color:#e5d9c0;line-height:1.6;margin:14px 0}
+.advisor-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:16px}
+.advisor-step{display:flex;gap:12px;align-items:flex-start;padding:11px 12px;border:1px solid #30332f;border-radius:6px;background:#0d0f10;color:#c7c9c5;font-size:12px;line-height:1.5}
+.advisor-step b{color:#c9a86a;font-size:12px;letter-spacing:.08em}
+.advisor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.advisor-platform{display:flex;flex-direction:column;gap:9px;padding:15px;border:1px solid #343631;border-radius:8px;background:#0e1010;min-width:0}
+.advisor-platform.recommended{border-color:#aa8a50;background:linear-gradient(145deg,#201b12,#101111 65%)}
+.advisor-title{display:flex;justify-content:space-between;align-items:flex-start;gap:7px}
+.advisor-title strong{font-size:13px;color:#f0eee8}
+.advisor-title small{font-size:8px;color:#e6c17d;letter-spacing:.08em;white-space:nowrap}
+.advisor-platform p{font-size:12px;line-height:1.5;color:#cccac3;margin:0}
+.advisor-platform>small{font-size:10px;line-height:1.55;color:#8d948e;flex:1}
+.advisor-link{color:#d6b77e;text-decoration:none;font-size:10px;letter-spacing:.09em;font-weight:700;margin-top:6px}
+.advisor-link:hover{text-decoration:underline}
+.advisor-note{margin-top:14px}
+@media(max-width:1050px){.advisor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.advisor-grid,.advisor-steps{grid-template-columns:1fr}}

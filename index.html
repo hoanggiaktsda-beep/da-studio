@@ -8,7 +8,7 @@
 </head>
 <body>
 <header class="top">
- <div class="brand"><img class="brand-logo" src="./assets/brand-mark.svg" width="48" height="48" alt="Biểu trưng HOANGGIA AI"><div><b>HOANGGIA <i>AI</i></b><small>XƯỞNG THIẾT KẾ · V1.6</small></div></div>
+ <div class="brand"><img class="brand-logo" src="./assets/brand-mark.svg" width="48" height="48" alt="Biểu trưng HOANGGIA AI"><div><b>HOANGGIA <i>AI</i></b><small>XƯỞNG THIẾT KẾ · V1.7</small></div></div>
  <div class="right-top"><span class="pill"><span class="dot"></span> BẢN PHÁT TRIỂN</span><button id="exportProject" class="quiet">Xuất dự án</button><label class="file-label quiet" for="importProject">Nhập JSON</label><input id="importProject" type="file" accept=".json,application/json" hidden></div>
 </header>
 <div class="workspace">
@@ -55,15 +55,23 @@
    <div id="warnings" class="warnings" role="status" aria-live="polite"></div>
    <pre id="promptOutput">Prompt đã biên dịch sẽ hiển thị tại đây...</pre>
   </section>
+  <section class="panel" id="imageAdvisor" aria-labelledby="advisorTitle">
+   <div class="panel-heading"><span class="eyebrow" id="advisorTitle">05 / ĐỀ XUẤT CÔNG NGHỆ & CÁCH TẠO ẢNH</span><span class="mini">THAM KHẢO QUỐC TẾ</span></div>
+   <p class="hint">Gợi ý theo tác vụ đang chọn. Đây là danh mục tham khảo, không phải bảng xếp hạng trực tiếp hoặc danh sách API đã tích hợp.</p>
+   <div class="advisor-summary" id="advisorSummary" aria-live="polite"></div>
+   <div class="advisor-steps" id="advisorSteps"></div>
+   <div class="advisor-grid" id="advisorPlatforms"></div>
+   <p class="hint advisor-note">Tạo ảnh trực tiếp trên website hiện chỉ hỗ trợ cổng OpenAI đã cấu hình. Chọn công cụ khác để tham khảo hoặc mở website của họ, không tự chuyển mô hình.</p>
+  </section>
   <section class="panel render">
-   <div class="panel-heading"><span class="eyebrow">05 / TẠO VÀ CHỈNH SỬA ẢNH</span><span class="mini">KẾT NỐI AI AN TOÀN</span></div>
+   <div class="panel-heading"><span class="eyebrow">06 / TẠO VÀ CHỈNH SỬA ẢNH</span><span class="mini">KẾT NỐI AI AN TOÀN</span></div>
    <p class="hint">GitHub Pages miễn phí lưu giao diện. Kết xuất AI chỉ chạy khi kết nối gateway riêng có xác thực; không nhập API key AI vào website công khai.</p>
    <details><summary>Cấu hình gateway (tùy chọn)</summary><label>Địa chỉ cổng AI (HTTPS)<input id="gateway" type="url" placeholder="https://your-worker.workers.dev"></label><label>Mã truy cập riêng <input id="studioToken" type="password" placeholder="Token kiểm soát quyền dùng AI" autocomplete="off"></label><small>Token chỉ tồn tại trong phiên trang đang mở, không được xuất ra dự án.</small></details>
    <div class="actions"><button id="renderButton" class="primary">TẠO / CHỈNH SỬA ẢNH <span>↗</span></button><span class="hint" id="renderStatus" role="status" aria-live="polite">Chưa kết nối cổng AI</span></div>
    <div class="comparison"><div class="result-frame"><span>ẢNH ĐẦU VÀO</span><img id="inputView" alt="Ảnh đầu vào" hidden><div class="placeholder" id="inputEmpty">ẢNH GỐC / THAM CHIẾU</div></div><div class="result-frame"><span>ẢNH KẾT QUẢ</span><img id="resultView" alt="Kết quả AI" hidden><div class="placeholder" id="resultEmpty">CHƯA RENDER</div></div></div>
    <button id="downloadResult" class="outline" hidden>TẢI ẢNH KẾT QUẢ ↓</button>
   </section>
-  <footer>HOANGGIA AI · XƯỞNG THIẾT KẾ V1.6 <span>Ảnh không lưu trên GitHub · Bản phát triển</span></footer>
+  <footer>HOANGGIA AI · XƯỞNG THIẾT KẾ V1.7 <span>Ảnh không lưu trên GitHub · Bản phát triển</span></footer>
  </main>
 </div>
 <script type="module" src="./app.mjs"></script>
