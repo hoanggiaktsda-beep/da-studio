@@ -1,26 +1,33 @@
 import {BRAINS,CATEGORIES,LOCKS,FIELD_DEFS,createModel,getWarnings,compilePrompt,projectSnapshot,makeRenderPayload} from "./core.mjs";
 import {SPACE_CATALOG,STYLE_OPTIONS,CAMERA_OPTIONS,LIGHTING_OPTIONS,ASPECT_OPTIONS,recommendVisual} from "./design-catalog.mjs";
 const $=id=>document.getElementById(id);
+const vn={
+ "Sofa":"Ghế sofa","Armchair":"Ghế đơn","Coffee Table":"Bàn trà","Furniture":"Nội thất","Camera":"Góc máy","Lighting":"Ánh sáng","Architecture":"Kiến trúc","Geometry":"Hình học","Furniture Layout":"Bố trí nội thất","Materials":"Vật liệu","Model Identity":"Nhận diện sản phẩm",
+ "Eye Level":"Tầm mắt","Low Angle":"Góc thấp","High Angle":"Góc cao","Worm's Eye View":"Góc nhìn từ dưới lên","Bird's Eye View":"Góc nhìn từ trên cao","Top-down 90°":"Nhìn thẳng từ trên xuống 90°","Aerial / Drone":"Flycam / Trên không","Isometric":"Trục đo đẳng phối","Axonometric":"Hình chiếu trục đo","One-point Perspective":"Phối cảnh một điểm tụ","Two-point Perspective":"Phối cảnh hai điểm tụ","Three-point Perspective":"Phối cảnh ba điểm tụ","Front Elevation":"Mặt đứng trước","Side Elevation":"Mặt đứng bên","Rear Elevation":"Mặt đứng sau","Corner View":"Góc nhìn từ góc phòng","Diagonal Composition":"Bố cục đường chéo","Symmetrical Central":"Đối xứng trung tâm","Wide Establishing":"Toàn cảnh rộng","Medium Shot":"Trung cảnh","Close-up Detail":"Cận cảnh chi tiết","Macro Material":"Cận cảnh vật liệu","Hero Shot":"Góc máy chủ đạo","Human Perspective":"Góc nhìn người sử dụng","Architectural Editorial":"Góc chụp tạp chí kiến trúc","Cinematic Frame":"Khung hình điện ảnh","35mm Lens":"Ống kính 35mm","50mm Lens":"Ống kính 50mm","24mm Wide":"Góc rộng 24mm","16mm Ultra-wide":"Siêu rộng 16mm","Tilt-shift Architectural":"Ống kính chỉnh phối cảnh","Panorama":"Toàn cảnh Panorama",
+ "Natural Daylight":"Ánh sáng tự nhiên ban ngày","Morning Soft Light":"Ánh sáng sớm dịu","Noon Sunlight":"Nắng giữa trưa","Afternoon Daylight":"Ánh sáng chiều","Golden Hour":"Giờ vàng","Blue Hour":"Giờ xanh","Overcast Soft Light":"Trời âm u ánh sáng dịu","Cloudy Diffused":"Ánh sáng tán xạ trời mây","Dawn":"Bình minh","Dusk":"Hoàng hôn","Night Exterior":"Ngoại thất ban đêm","Night Interior":"Nội thất ban đêm","Warm Ambient 2700K":"Ánh sáng ấm 2700K","Warm White 3000K":"Trắng ấm 3000K","Neutral 3500K":"Trung tính 3500K","Neutral White 4000K":"Trắng trung tính 4000K","Cool White 5000K":"Trắng lạnh 5000K","Indirect Cove Lighting":"Hắt sáng gián tiếp","Architectural Accent":"Chiếu sáng nhấn kiến trúc","Track Spotlight":"Đèn rọi ray","Decorative Pendant":"Đèn thả trang trí","Chandelier":"Đèn chùm","Wall Washer":"Rọi tường","Linear Lighting":"Đèn tuyến tính","Softbox Studio":"Ánh sáng studio dịu","Cinematic Contrast":"Tương phản điện ảnh","Low-key":"Ánh sáng tối tương phản","High-key":"Ánh sáng sáng đều","Moody Dark":"Không khí tối trầm","Gallery Lighting":"Chiếu sáng phòng trưng bày","Hospitality Lighting":"Chiếu sáng khách sạn","Mixed Natural + Artificial":"Kết hợp sáng tự nhiên và nhân tạo","RGB Ambient":"Ánh sáng RGB",
+ "Urban & Master Planning":"Quy hoạch và tổng mặt bằng","Architecture":"Kiến trúc","Interior":"Nội thất","Visual / Cinematic":"Hình ảnh và điện ảnh","Image Engine":"Bộ xử lý hình ảnh","Quality Control":"Kiểm soát chất lượng"
+};
+const vi=v=>vn[v]||v;
 const state={mode:"create",master:null,masterURL:null,models:[],expanded:null,generated:null};
 const fields=["space","zone","style","camera","lighting","brief","quality","expertMode"];
 const liveSettings=()=>({mode:state.mode,space:$("space").value,zone:$("zone").value,style:$("style").value,camera:$("camera").value,lighting:$("lighting").value,aspect:$("aspect").selectedOptions[0]?.textContent||"3:2 Ngang",brief:$("brief").value,size:$("aspect").value,quality:$("quality").value,expertMode:$("expertMode").value,chosenBrains:[...document.querySelectorAll("[data-brain]:checked")].map(x=>x.value),locks:[...document.querySelectorAll("[data-lock]:checked")].map(x=>x.value),masterImage:state.master,models:state.models});
 const text=(tag,value,cls)=>{const x=document.createElement(tag);x.textContent=value;if(cls)x.className=cls;return x};
-const control=(tag,{value="",onChange,options=null,placeholder=""}={})=>{const e=document.createElement(tag);if(options){for(const v of options){const o=document.createElement("option");o.value=v;o.textContent=v;e.append(o)}}if(tag==="input")e.type="text";e.value=value;e.placeholder=placeholder;e.addEventListener("input",()=>onChange?.(e.value));return e};
+const control=(tag,{value="",onChange,options=null,placeholder=""}={})=>{const e=document.createElement(tag);if(options){for(const v of options){const o=document.createElement("option");o.value=v;o.textContent=vi(v);e.append(o)}}if(tag==="input")e.type="text";e.value=value;e.placeholder=placeholder;e.addEventListener("input",()=>onChange?.(e.value));return e};
 function inputLabel(label,element){const l=text("label",label);l.append(element);return l}
-function setMode(v){state.mode=v;for(const id of ["create","edit"])$(id+"Tab").classList.toggle("selected",id===v);$("masterHint").textContent=v==="edit"?"Bắt buộc cho chỉnh sửa ảnh hiện trạng":"Không bắt buộc khi tạo ảnh từ văn bản";$("masterLabel").textContent=v==="edit"?"+ TẢI MASTER IMAGE":"+ THÊM ẢNH THAM CHIẾU";$("renderButton").firstChild.textContent=v==="edit"?"EDIT IMAGE ":"GENERATE IMAGE "}
+function setMode(v){state.mode=v;for(const id of ["create","edit"])$(id+"Tab").classList.toggle("selected",id===v);$("masterHint").textContent=v==="edit"?"Bắt buộc khi chỉnh sửa ảnh hiện trạng":"Không bắt buộc khi tạo ảnh từ văn bản";$("masterLabel").textContent=v==="edit"?"+ TẢI ẢNH GỐC":"+ THÊM ẢNH THAM CHIẾU";$("renderButton").firstChild.textContent=v==="edit"?"CHỈNH SỬA ẢNH ":"TẠO ẢNH "}
 function updateMaster(f){if(state.masterURL)URL.revokeObjectURL(state.masterURL);state.master=f||null;state.masterURL=f?URL.createObjectURL(f):null;$("masterArea").hidden=!f;$("masterPreview").src=state.masterURL||"";$("inputView").hidden=!f;$("inputView").src=state.masterURL||"";$("inputEmpty").hidden=!!f;if(!f)$("masterInput").value=""}
 function revokeRefs(m){m.references.forEach(r=>r.url&&URL.revokeObjectURL(r.url))}
 function addModel(){const m=createModel();state.models.push(m);state.expanded=m.id;drawModels()}
 function drawModels(){
- const holder=$("models");holder.replaceChildren();$("modelCount").textContent=state.models.length+" MODEL";
+ const holder=$("models");holder.replaceChildren();$("modelCount").textContent=state.models.length+" SẢN PHẨM";
  for(const m of state.models){
   const card=text("article","","model-card"),head=text("div","","model-header");
-  const check=document.createElement("input");check.type="checkbox";check.className="toggle";check.checked=m.selected;check.title="Chọn Model để áp dụng";check.addEventListener("change",()=>m.selected=check.checked);head.append(check);
-  const expand=text("button","","expand");const named=text("strong",m.name||m.id),desc=text("small",m.category+" · "+m.references.length+" ảnh");expand.append(named,desc);expand.addEventListener("click",()=>{state.expanded=state.expanded===m.id?null:m.id;drawModels()});head.append(expand);
+  const check=document.createElement("input");check.type="checkbox";check.className="toggle";check.checked=m.selected;check.title="Chọn sản phẩm để áp dụng";check.addEventListener("change",()=>m.selected=check.checked);head.append(check);
+  const expand=text("button","","expand");const named=text("strong",m.name||m.id),desc=text("small",vi(m.category)+" · "+m.references.length+" ảnh");expand.append(named,desc);expand.addEventListener("click",()=>{state.expanded=state.expanded===m.id?null:m.id;drawModels()});head.append(expand);
   const rm=text("button","×","remove");rm.title="Xóa Model";rm.addEventListener("click",()=>{revokeRefs(m);state.models=state.models.filter(x=>x.id!==m.id);if(state.expanded===m.id)state.expanded=null;drawModels()});head.append(rm);card.append(head);
   const body=text("div","","model-body");body.hidden=state.expanded!==m.id;
-  const name=control("input",{value:m.name,onChange:v=>{m.name=v;named.textContent=v||m.id}});body.append(inputLabel("Tên Model (chỉnh tự do)",name));
-  const category=control("select",{value:m.category,options:CATEGORIES,onChange:v=>{m.category=v;desc.textContent=v+" · "+m.references.length+" ảnh";drawModels()}});body.append(inputLabel("Danh mục",category));
+  const name=control("input",{value:m.name,onChange:v=>{m.name=v;named.textContent=v||m.id}});body.append(inputLabel("Tên sản phẩm (tự đặt)",name));
+  const category=control("select",{value:m.category,options:CATEGORIES,onChange:v=>{m.category=v;desc.textContent=vi(v)+" · "+m.references.length+" ảnh";drawModels()}});body.append(inputLabel("Danh mục",category));
   const row=text("div","","grid-two");
   for(const [label,key] of [["Thương hiệu","brand"],["Mã Model","sku"]])row.append(inputLabel(label,control("input",{value:m[key],onChange:v=>m[key]=v})));
   body.append(row);
@@ -45,15 +52,15 @@ function downloadText(name,content,type="text/plain"){const b=new Blob([content]
 async function readDataURL(f){return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Không đọc được "+f.name));reader.readAsDataURL(f)})}
 async function render(){
  const c=liveSettings(),prompt=compile(),w=getWarnings(c);
- if(c.mode==="edit"&&!state.master){showStatus("Chưa có Master Image để chỉnh sửa.",true);return}
- if(w.some(x=>x.startsWith("Xung đột")||x.includes("Tối đa 16"))){showStatus("Có xung đột cần giải quyết trước khi render.",true);return}
+ if(c.mode==="edit"&&!state.master){showStatus("Cần tải ảnh gốc trước khi chỉnh sửa.",true);return}
+ if(w.some(x=>x.startsWith("Xung đột")||x.includes("Tối đa 16"))){showStatus("Có xung đột cần giải quyết trước khi tạo ảnh.",true);return}
  const endpoint=$("gateway").value.trim().replace(/\/+$/,"");const token=$("studioToken").value.trim();
- if(!endpoint||!token){showStatus("Cần Gateway URL và Studio Access Token. Xem README để cấu hình.",true);return}
- if(!(/^https:\/\//.test(endpoint)||/^http:\/\/localhost(?::\d+)?$/.test(endpoint))){showStatus("Gateway phải dùng HTTPS (hoặc localhost).",true);return}
+ if(!endpoint||!token){showStatus("Cần địa chỉ cổng AI và mã truy cập. Xem hướng dẫn cấu hình.",true);return}
+ if(!(/^https:\/\//.test(endpoint)||/^http:\/\/localhost(?::\d+)?$/.test(endpoint))){showStatus("Cổng AI phải dùng HTTPS (hoặc localhost).",true);return}
  const refs=[];if(state.master)refs.push({file:state.master,model:"MASTER",index:0});
  for(const m of state.models.filter(m=>m.selected)){m.references.forEach((r,i)=>{if(r.file)refs.push({file:r.file,model:m.id,index:i+1})})}
  if(refs.length>16){showStatus("Chỉ hỗ trợ tối đa 16 ảnh trong một lần gọi API.",true);return}
- $("renderButton").disabled=true;showStatus("Đang gửi yêu cầu tới AI Gateway…");
+ $("renderButton").disabled=true;showStatus("Đang gửi yêu cầu tới cổng AI…");
  try{
   const images=[];for(const r of refs)images.push({image_url:await readDataURL(r.file),source:r.model,order:r.index});
   const response=await fetch(endpoint+"/render",{method:"POST",headers:{"Content-Type":"application/json","X-Studio-Token":token},body:JSON.stringify(makeRenderPayload(c,prompt,images))});
@@ -62,19 +69,19 @@ async function render(){
   if(!result.image||typeof result.image!=="string")throw new Error("Gateway chưa trả về ảnh hợp lệ.");
   state.generated="data:"+(result.mime||"image/png")+";base64,"+result.image;
   $("resultView").src=state.generated;$("resultView").hidden=false;$("resultEmpty").hidden=true;$("downloadResult").hidden=false;
-  showStatus("Đã nhận ảnh tạo từ AI.");
- }catch(e){showStatus("Render thất bại: "+(e.message||String(e)),true)}finally{$("renderButton").disabled=false}
+  showStatus("Đã nhận ảnh từ AI.");
+ }catch(e){showStatus("Không tạo được ảnh: "+(e.message||String(e)),true)}finally{$("renderButton").disabled=false}
 }
-function populate(select,values,keep){const old=keep?select.value:null;select.replaceChildren();for(const v of values){const option=document.createElement("option");option.value=v;option.textContent=v;select.append(option)}if(old&&values.includes(old))select.value=old}
+function populate(select,values,keep){const old=keep?select.value:null;select.replaceChildren();for(const v of values){const option=document.createElement("option");option.value=v;option.textContent=vi(v);select.append(option)}if(old&&values.includes(old))select.value=old}
 function updateZone(){populate($("zone"),SPACE_CATALOG[$("space").value]||SPACE_CATALOG["Nội thất"],false)}
 populate($("style"),STYLE_OPTIONS,false);populate($("camera"),CAMERA_OPTIONS,false);populate($("lighting"),LIGHTING_OPTIONS,false);updateZone();
 for(const [label,value] of ASPECT_OPTIONS){const option=document.createElement("option");option.value=value;option.textContent=label;$("aspect").append(option)}
 $("aspect").addEventListener("change",()=>{$("aspectHint").textContent="Độ phân giải API: "+$("aspect").value.replace("x","×")+(["3:2 Ngang","2:3 Dọc","1:1 Vuông"].includes($("aspect").selectedOptions[0].textContent)?"":" · API chỉ hỗ trợ tỷ lệ gần đúng")});
 $("space").addEventListener("change",updateZone);
-for(const b of BRAINS){const card=text("div","","brain");card.append(text("b",String(b.experts.length)),text("small",b.name));$("brainGrid").append(card);
- const l=text("label","","");const c=document.createElement("input");c.type="checkbox";c.className="toggle";c.value=b.id;c.dataset.brain="true";c.checked=true;l.append(c," "+b.name+" ("+b.experts.length+")");$("manualExperts").append(l);
+for(const b of BRAINS){const card=text("div","","brain");card.append(text("b",String(b.experts.length)),text("small",vi(b.name)));$("brainGrid").append(card);
+ const l=text("label","","");const c=document.createElement("input");c.type="checkbox";c.className="toggle";c.value=b.id;c.dataset.brain="true";c.checked=true;l.append(c," "+vi(b.name)+" ("+b.experts.length+")");$("manualExperts").append(l);
 }
-for(const l of LOCKS){const label=text("label");const checkbox=document.createElement("input");checkbox.className="toggle";checkbox.type="checkbox";checkbox.value=l;checkbox.dataset.lock="true";checkbox.checked=["Architecture","Geometry","Camera"].includes(l);label.append(checkbox," "+l);$("locks").append(label)}
+for(const l of LOCKS){const label=text("label");const checkbox=document.createElement("input");checkbox.className="toggle";checkbox.type="checkbox";checkbox.value=l;checkbox.dataset.lock="true";checkbox.checked=["Architecture","Geometry","Camera"].includes(l);label.append(checkbox," "+vi(l));$("locks").append(label)}
 $("createTab").onclick=()=>setMode("create");$("editTab").onclick=()=>setMode("edit");
 $("masterInput").onchange=e=>{const f=e.target.files?.[0];if(f)updateMaster(f)};
 $("clearMaster").onclick=()=>updateMaster(null);
@@ -83,7 +90,7 @@ $("expertMode").onchange=()=>{$("manualExperts").hidden=$("expertMode").value!==
 $("compile").onclick=compile;
 $("copyPrompt").onclick=async()=>{await navigator.clipboard.writeText(compile());showStatus("Đã sao chép prompt.")};
 $("downloadPrompt").onclick=()=>downloadText("hoanggia-prompt.txt",compile());
-$("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"1.4",...projectSnapshot(liveSettings())},null,2),"application/json");
+$("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"1.6",...projectSnapshot(liveSettings())},null,2),"application/json");
 $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;const v=JSON.parse(await f.text());if(!Array.isArray(v.models))throw Error("Sai cấu trúc JSON");for(const m of state.models)revokeRefs(m);state.models=v.models.slice(0,200).map(()=>null).map((_,i)=>{const o=v.models[i],m=createModel();return {...m,...o,id:m.id,references:[],properties:o.properties&&typeof o.properties==="object"?o.properties:{},notes:(o.notes||"")+(o.references?.length?" [Cần tải lại ảnh gốc sau khi nhập JSON.]":"")}});if(typeof v.space==="string"&&SPACE_CATALOG[v.space]){$("space").value=v.space;updateZone()}
  for(const key of fields){if(typeof v[key]==="string"&&[...$(key).options||[]].length){if([...$(key).options].some(x=>x.value===v[key]))$(key).value=v[key]}else if(key==="brief"&&typeof v[key]==="string")$(key).value=v[key]}
  if(v.aspect){const option=[...$("aspect").options].find(x=>x.textContent===v.aspect);if(option)$("aspect").selectedIndex=option.index}
