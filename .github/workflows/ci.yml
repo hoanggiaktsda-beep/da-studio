@@ -1,0 +1,27 @@
+name: DA Studio CI
+on:
+  push:
+    branches: [main, "develop/**"]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: JavaScript syntax and tests
+        run: |
+          node --check app.mjs
+          node --check core.mjs
+          node --check worker/index.mjs
+          node --test tests/*.test.mjs
+      - name: Static entry check
+        run: |
+          test -s index.html
+          test -s styles.css
+          grep -q 'src="./app.mjs"' index.html
