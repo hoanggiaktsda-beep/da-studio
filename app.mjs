@@ -130,4 +130,25 @@ $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)retu
  setMode(v.mode==="edit"?"edit":"create");drawModels();updateMaster(null);updateRenderHints();showStatus("Đã nhập cấu hình. Vì lý do bảo mật, vui lòng tải lại file ảnh gốc.");}catch(e){showStatus("Không nhập được JSON: "+e.message,true)}finally{e.target.value=""}};
 $("renderButton").onclick=render;
 $("downloadResult").onclick=()=>{if(!state.generated)return;const a=document.createElement("a");a.href=state.generated;a.download="hoanggia-ai-image.png";document.body.append(a);a.click();a.remove()};
+function startNewProject(){
+ if(!window.confirm("Tạo dự án mới? Prompt, Model, ảnh tham chiếu và kết quả hiện tại sẽ bị xóa. Hãy xuất dự án hoặc tải kết quả trước khi tiếp tục."))return;
+ for(const m of state.models)revokeRefs(m);
+ state.models=[];state.expanded=null;state.generated=null;
+ updateMaster(null);
+ $("space").selectedIndex=0;updateZone();
+ for(const id of ["style","camera","lighting","aspect","imageAI","expertMode"])$(id).selectedIndex=0;
+ $("quality").value="medium";$("brief").value="";
+ for(const c of document.querySelectorAll("[data-brain]"))c.checked=true;
+ for(const c of document.querySelectorAll("[data-lock]"))c.checked=["Architecture","Geometry","Camera"].includes(c.value);
+ $("manualExperts").hidden=true;
+ $("promptOutput").textContent="Prompt đã biên dịch sẽ hiển thị tại đây...";
+ $("warnings").replaceChildren();
+ $("resultView").removeAttribute("src");$("resultView").hidden=true;
+ $("resultEmpty").hidden=false;$("downloadResult").hidden=true;
+ $("renderStatus").textContent="Sẵn sàng cho dự án mới";
+ $("importProject").value="";
+ setMode("create");addModel();updateRenderHints();drawAdvisor();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+$("newProject").addEventListener("click",startNewProject);
 setMode("create");addModel();drawAdvisor();
