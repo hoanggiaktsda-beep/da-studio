@@ -8,7 +8,7 @@
 </head>
 <body>
 <header class="top">
- <div class="brand"><img class="brand-logo" src="./assets/brand-mark.svg" width="48" height="48" alt="Biểu trưng HOANGGIA AI"><div><b>HOANGGIA <i>AI</i></b><small>XƯỞNG THIẾT KẾ · V1.7</small></div></div>
+ <div class="brand"><img class="brand-logo" src="./assets/brand-mark.svg" width="48" height="48" alt="Biểu trưng HOANGGIA AI"><div><b>HOANGGIA <i>AI</i></b><small>XƯỞNG THIẾT KẾ · V1.8</small></div></div>
  <div class="right-top"><span class="pill"><span class="dot"></span> BẢN PHÁT TRIỂN</span><button id="exportProject" class="quiet">Xuất dự án</button><label class="file-label quiet" for="importProject">Nhập JSON</label><input id="importProject" type="file" accept=".json,application/json" hidden></div>
 </header>
 <div class="workspace">
@@ -58,10 +58,11 @@
   <section class="panel" id="imageAdvisor" aria-labelledby="advisorTitle">
    <div class="panel-heading"><span class="eyebrow" id="advisorTitle">05 / ĐỀ XUẤT CÔNG NGHỆ & CÁCH TẠO ẢNH</span><span class="mini">THAM KHẢO QUỐC TẾ</span></div>
    <p class="hint">Gợi ý theo tác vụ đang chọn. Đây là danh mục tham khảo, không phải bảng xếp hạng trực tiếp hoặc danh sách API đã tích hợp.</p>
+   <div class="advisor-picker"><label>AI muốn sử dụng<select id="imageAI"><option value="auto">HG TỰ ĐỀ XUẤT</option></select></label><div class="advisor-selection" id="aiSelection" role="status" aria-live="polite"></div><button class="outline" id="copyForAI" type="button">SAO CHÉP PROMPT CHO AI ĐÃ CHỌN</button></div>
    <div class="advisor-summary" id="advisorSummary" aria-live="polite"></div>
    <div class="advisor-steps" id="advisorSteps"></div>
    <div class="advisor-grid" id="advisorPlatforms"></div>
-   <p class="hint advisor-note">Tạo ảnh trực tiếp trên website hiện chỉ hỗ trợ cổng OpenAI đã cấu hình. Chọn công cụ khác để tham khảo hoặc mở website của họ, không tự chuyển mô hình.</p>
+   <p class="hint advisor-note">Tạo ảnh trực tiếp trên website hiện chỉ hỗ trợ cổng OpenAI đã cấu hình. Ốc có thể lựa chọn AI để xuất prompt phù hợp và mở nền tảng đó. Chỉ OpenAI được hỗ trợ qua gateway hiện tại; không tự chuyển mô hình.</p>
   </section>
   <section class="panel render">
    <div class="panel-heading"><span class="eyebrow">06 / TẠO VÀ CHỈNH SỬA ẢNH</span><span class="mini">KẾT NỐI AI AN TOÀN</span></div>
@@ -71,7 +72,7 @@
    <div class="comparison"><div class="result-frame"><span>ẢNH ĐẦU VÀO</span><img id="inputView" alt="Ảnh đầu vào" hidden><div class="placeholder" id="inputEmpty">ẢNH GỐC / THAM CHIẾU</div></div><div class="result-frame"><span>ẢNH KẾT QUẢ</span><img id="resultView" alt="Kết quả AI" hidden><div class="placeholder" id="resultEmpty">CHƯA RENDER</div></div></div>
    <button id="downloadResult" class="outline" hidden>TẢI ẢNH KẾT QUẢ ↓</button>
   </section>
-  <footer>HOANGGIA AI · XƯỞNG THIẾT KẾ V1.7 <span>Ảnh không lưu trên GitHub · Bản phát triển</span></footer>
+  <footer>HOANGGIA AI · XƯỞNG THIẾT KẾ V1.8 <span>Ảnh không lưu trên GitHub · Bản phát triển</span></footer>
  </main>
 </div>
 <script type="module" src="./app.mjs"></script>
