@@ -2,56 +2,56 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#101419"><meta name="description" content="HOANGGIA AI Design Studio — Architecture, Interior, Multi-Model References">
+<meta name="theme-color" content="#070807"><link rel="icon" href="./assets/brand-mark.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="./assets/brand-mark.svg"><meta name="description" content="HOANGGIA AI Design Studio — Architecture, Interior, Multi-sản phẩm References">
 <title>HOANGGIA AI · Design Studio</title>
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 <header class="top">
- <div class="brand"><span class="mark">H<span>G</span></span><div><b>HOANGGIA <i>AI</i></b><small>DESIGN STUDIO · V1.5</small></div></div>
- <div class="right-top"><span class="pill"><span class="dot"></span> BẢN THỬ NGHIỆM</span><button id="exportProject" class="quiet">Xuất dự án</button><label class="file-label quiet" for="importProject">Nhập JSON</label><input id="importProject" type="file" accept=".json,application/json" hidden></div>
+ <div class="brand"><img class="brand-logo" src="./assets/brand-mark.svg" alt="Biểu trưng HOANGGIA AI"><div><b>HOANGGIA <i>AI</i></b><small>XƯỞNG THIẾT KẾ · V1.6</small></div></div>
+ <div class="right-top"><span class="pill"><span class="dot"></span> BẢN PHÁT TRIỂN</span><button id="exportProject" class="quiet">Xuất dự án</button><label class="file-label quiet" for="importProject">Nhập JSON</label><input id="importProject" type="file" accept=".json,application/json" hidden></div>
 </header>
 <div class="workspace">
  <aside class="left">
- <div class="section-label">WORKSPACE</div>
- <nav class="tabs" aria-label="Chế độ làm việc"><button id="createTab" class="selected" data-mode="create"><span>01</span> AI IMAGE CREATOR</button><button id="editTab" data-mode="edit"><span>02</span> AI IMAGE EDITOR</button></nav>
+ <div class="section-label">KHÔNG GIAN LÀM VIỆC</div>
+ <nav class="tabs" aria-label="Chế độ làm việc"><button id="createTab" class="selected" data-mode="create"><span>01</span> TẠO ẢNH AI</button><button id="editTab" data-mode="edit"><span>02</span> CHỈNH SỬA ẢNH AI</button></nav>
  <section class="panel">
-  <div class="panel-heading"><span class="eyebrow">01 / DESIGN INPUT</span><span class="mini">ĐIỀU KHIỂN</span></div>
+  <div class="panel-heading"><span class="eyebrow">01 / THIẾT LẬP THIẾT KẾ</span><span class="mini">ĐIỀU KHIỂN</span></div>
   <div class="grid-two"><label>Loại không gian<select id="space"><option>Nội thất</option><option>Kiến trúc</option><option>Cảnh quan</option><option>Quy hoạch đô thị</option></select></label><label>Phong cách<select id="style"></select></label></div>
   <label id="zoneLabel">Không gian cụ thể<select id="zone"></select></label><div class="grid-two"><label>Góc camera<select id="camera"></select></label><label>Ánh sáng<select id="lighting"></select></label></div><p class="hint">HG tự đề xuất dựa theo loại công trình, chế độ và ảnh hiện trạng. Camera/ánh sáng được giữ nguyên nếu Design Lock tương ứng bật.</p><label>Ý tưởng thiết kế<textarea id="brief" rows="3" placeholder="Ví dụ: phòng khách luxury, ánh sáng ban ngày, đá travertine, bố cục tĩnh..."></textarea></label>
-  <div class="grid-two"><label>Khung hình<select id="aspect"></select><small id="aspectHint">Độ phân giải API: 1536×1024</small></label><label>Chất lượng<select id="quality"><option value="medium">Medium</option><option value="low">Draft</option><option value="high">High</option></select></label></div>
-  <label class="upload" for="masterInput"><span id="masterLabel">+ TẢI MASTER / REFERENCE</span><small id="masterHint">Không bắt buộc khi tạo ảnh từ văn bản</small></label><input type="file" id="masterInput" accept="image/png,image/jpeg,image/webp" hidden>
+  <div class="grid-two"><label>Khung hình<select id="aspect"></select><small id="aspectHint">Độ phân giải API: 1536×1024</small></label><label>Chất lượng<select id="quality"><option value="medium">Trung bình</option><option value="low">Nháp</option><option value="high">Cao</option></select></label></div>
+  <label class="upload" for="masterInput"><span id="masterLabel">+ TẢI ẢNH GỐC / THAM CHIẾU</span><small id="masterHint">Không bắt buộc khi tạo ảnh từ văn bản</small></label><input type="file" id="masterInput" accept="image/png,image/jpeg,image/webp" hidden>
   <div class="master-preview" id="masterArea" hidden><img id="masterPreview" alt="Ảnh master"><button id="clearMaster" class="mini-btn">Gỡ ảnh</button></div>
  </section>
  <section class="panel">
-  <div class="panel-heading"><span class="eyebrow">02 / MULTI-MODEL LIBRARY</span><strong id="modelCount">0 MODEL</strong></div>
+  <div class="panel-heading"><span class="eyebrow">02 / THƯ VIỆN SẢN PHẨM</span><strong id="modelCount">0 SẢN PHẨM</strong></div>
   <p class="hint">Mỗi Model có tên, mục tiêu thay thế và ảnh tham chiếu riêng. Có thể chọn nhiều Model cho một lần dựng ảnh.</p>
-  <div id="models" class="models"></div><button id="addModel" class="outline full">+ THÊM MODEL</button>
+  <div id="models" class="models"></div><button id="addModel" class="outline full">+ THÊM SẢN PHẨM</button>
  </section>
  <section class="panel">
-  <div class="panel-heading"><span class="eyebrow">03 / DESIGN LOCK</span><span class="mini">EDITOR</span></div>
+  <div class="panel-heading"><span class="eyebrow">03 / KHÓA THIẾT KẾ</span><span class="mini">EDITOR</span></div>
   <div id="locks" class="lock-grid"></div>
  </section>
  </aside>
  <main class="right">
-  <section class="hero"><div><span class="eyebrow gold">ARCHITECTURE · INTERIOR · INTELLIGENCE</span><h1>Design without limits.<br><em>Preserve what matters.</em></h1><p>Tạo ý tưởng, đồng bộ hình ảnh, kiểm soát từng Model — dành cho quy trình thiết kế kiến trúc và nội thất chuyên nghiệp.</p></div><div class="hero-outline" aria-hidden="true"><span>H</span><span>G</span></div></section>
+  <section class="hero"><div><span class="eyebrow gold">KIẾN TRÚC · NỘI THẤT · TRÍ TUỆ THIẾT KẾ</span><h1>Sáng tạo không giới hạn.<br><em>Giữ trọn giá trị thiết kế.</em></h1><p>Tạo ý tưởng, đồng bộ hình ảnh, kiểm soát từng Model — dành cho quy trình thiết kế kiến trúc và nội thất chuyên nghiệp.</p></div><div class="hero-outline" aria-hidden="true"><span>H</span><span>G</span></div></section>
   <section class="panel">
-   <div class="panel-heading"><span class="eyebrow">04 / EXPERT ORCHESTRATOR</span><span class="mini">48 EXPERTS · 6 BRAINS</span></div>
-   <div class="brain-grid" id="brainGrid"></div><label>Điều phối chuyên gia<select id="expertMode"><option value="auto">AUTO — Kích hoạt theo ngữ cảnh</option><option value="manual">MANUAL — Chọn nhóm thủ công</option></select></label>
+   <div class="panel-heading"><span class="eyebrow">04 / ĐIỀU PHỐI CHUYÊN GIA</span><span class="mini">48 CHUYÊN GIA · 6 BỘ NÃO</span></div>
+   <div class="brain-grid" id="brainGrid"></div><label>Điều phối chuyên gia<select id="expertMode"><option value="auto">TỰ ĐỘNG — Kích hoạt theo ngữ cảnh</option><option value="manual">THỦ CÔNG — Chọn nhóm chuyên gia</option></select></label>
    <div id="manualExperts" hidden></div>
    <div class="actions"><button id="compile" class="primary">BIÊN DỊCH PROMPT <span>↗</span></button><button class="outline" id="copyPrompt">SAO CHÉP</button><button class="outline" id="downloadPrompt">TẢI .TXT</button></div>
    <div id="warnings" class="warnings" role="status" aria-live="polite"></div>
    <pre id="promptOutput">Prompt đã biên dịch sẽ hiển thị tại đây...</pre>
   </section>
   <section class="panel render">
-   <div class="panel-heading"><span class="eyebrow">05 / IMAGE EXECUTION</span><span class="mini">SECURE AI CONNECTOR</span></div>
+   <div class="panel-heading"><span class="eyebrow">05 / TẠO VÀ CHỈNH SỬA ẢNH</span><span class="mini">KẾT NỐI AI AN TOÀN</span></div>
    <p class="hint">GitHub Pages miễn phí lưu giao diện. Kết xuất AI chỉ chạy khi kết nối gateway riêng có xác thực; không nhập API key AI vào website công khai.</p>
-   <details><summary>Cấu hình gateway (tùy chọn)</summary><label>Gateway URL (HTTPS)<input id="gateway" type="url" placeholder="https://your-worker.workers.dev"></label><label>Studio Access Token <input id="studioToken" type="password" placeholder="Token kiểm soát quyền dùng AI" autocomplete="off"></label><small>Token chỉ tồn tại trong phiên trang đang mở, không được xuất ra dự án.</small></details>
-   <div class="actions"><button id="renderButton" class="primary">GENERATE / EDIT IMAGE <span>↗</span></button><span class="hint" id="renderStatus" role="status" aria-live="polite">Chưa kết nối AI Gateway</span></div>
-   <div class="comparison"><div class="result-frame"><span>INPUT IMAGE</span><img id="inputView" alt="Ảnh đầu vào" hidden><div class="placeholder" id="inputEmpty">MASTER / REFERENCE</div></div><div class="result-frame"><span>AI OUTPUT</span><img id="resultView" alt="Kết quả AI" hidden><div class="placeholder" id="resultEmpty">CHƯA RENDER</div></div></div>
+   <details><summary>Cấu hình gateway (tùy chọn)</summary><label>Địa chỉ cổng AI (HTTPS)<input id="gateway" type="url" placeholder="https://your-worker.workers.dev"></label><label>Mã truy cập riêng <input id="studioToken" type="password" placeholder="Token kiểm soát quyền dùng AI" autocomplete="off"></label><small>Token chỉ tồn tại trong phiên trang đang mở, không được xuất ra dự án.</small></details>
+   <div class="actions"><button id="renderButton" class="primary">TẠO / CHỈNH SỬA ẢNH <span>↗</span></button><span class="hint" id="renderStatus" role="status" aria-live="polite">Chưa kết nối cổng AI</span></div>
+   <div class="comparison"><div class="result-frame"><span>ẢNH ĐẦU VÀO</span><img id="inputView" alt="Ảnh đầu vào" hidden><div class="placeholder" id="inputEmpty">ẢNH GỐC / THAM CHIẾU</div></div><div class="result-frame"><span>ẢNH KẾT QUẢ</span><img id="resultView" alt="Kết quả AI" hidden><div class="placeholder" id="resultEmpty">CHƯA RENDER</div></div></div>
    <button id="downloadResult" class="outline" hidden>TẢI ẢNH KẾT QUẢ ↓</button>
   </section>
-  <footer>HOANGGIA AI · DESIGN STUDIO V1.5 <span>Không lưu ảnh lên GitHub · Bản thử nghiệm</span></footer>
+  <footer>HOANGGIA AI · XƯỞNG THIẾT KẾ V1.6 <span>Ảnh không lưu trên GitHub · Bản phát triển</span></footer>
  </main>
 </div>
 <script type="module" src="./app.mjs"></script>
