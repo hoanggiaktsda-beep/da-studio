@@ -13,3 +13,11 @@ const edit=mode==="edit";const recommendations=edit?["openai","sd","firefly"]:ha
 const steps=edit?["Giữ ảnh Master làm nguồn không gian","Khóa camera và hình học","Gán từng ảnh tham chiếu cho đúng sản phẩm","Chỉnh sửa chọn lọc và kiểm tra sai lệch"]:hasRefs?["Xác định mục tiêu ảnh và phong cách","Phân tách ảnh tham chiếu theo từng Model","Tạo prompt có cấu trúc và kiểm tra ánh sáng","Kết xuất và đối chiếu tỷ lệ, vật liệu"]:["Xác định không gian và phong cách","Chọn góc máy, thời gian và ánh sáng","Tạo các phương án concept","Đánh giá bố cục, tính khả thi và độ chân thực"];
 return {recommendations,steps,reason:edit?"Ưu tiên công cụ hỗ trợ chỉnh sửa có ảnh gốc, bảo toàn bố cục và kiểm soát vùng thay đổi.":hasRefs?"Ưu tiên hệ thống hỗ trợ ảnh tham chiếu và độ nhất quán của sản phẩm.":"Ưu tiên khám phá concept, kiểm soát phong cách và độ chân thực."};
 }
+
+export function resolveImageAI(selection,context){
+ const advice=adviseImageWorkflow(context);
+ const suggested=advice.recommendations[0];
+ const selected=selection==="auto"?suggested:selection;
+ const platform=IMAGE_PLATFORMS.find(p=>p.id===selected)||IMAGE_PLATFORMS[0];
+ return {platform,automatic:selection==="auto",suggested,canRender:platform.id==="openai"};
+}
