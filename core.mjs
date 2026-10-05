@@ -39,8 +39,47 @@ export function selectBrains({space="Nội thất",mode="create",models=[]},expe
  }
  return BRAINS.filter(b=>ids.has(b.id));
 }
+
+// Structured evidence-based design audit. Thresholds are explicitly project-defined,
+// not universal building codes or automatically measured from photos.
+export function auditDesign(c={}){
+ const issues=[],evidence=[],models=(c.models||[]).filter(m=>m.selected);
+ const add=(severity,field,message)=>issues.push({severity,field,message});
+ const numeric=(v)=>v===""||v===null||v===undefined?null:Number(v);
+ const width=numeric(c.clearanceMm),required=numeric(c.requiredClearanceMm);
+ if(required!==null){
+  if(!Number.isFinite(required)||required<=0)add("error","requiredClearanceMm","Ngưỡng lối đi phải là số dương do dự án cung cấp.");
+  else if(width===null)add("unknown","clearanceMm","Chưa có số đo lối đi để đối chiếu ngưỡng dự án.");
+  else if(!Number.isFinite(width)||width<=0)add("error","clearanceMm","Số đo lối đi không hợp lệ.");
+  else {evidence.push("Lối đi: "+width+" mm / yêu cầu dự án: "+required+" mm");if(width<required)add("error","clearanceMm","Lối đi nhỏ hơn ngưỡng dự án đã nhập.");}
+ }else if(width!==null)add("unknown","requiredClearanceMm","Chưa có ngưỡng đối chiếu; không tự kết luận lối đi đạt chuẩn.");
+ const roomW=numeric(c.roomWidthMm),roomD=numeric(c.roomDepthMm);
+ for(const [key,v] of [["roomWidthMm",roomW],["roomDepthMm",roomD]])if(v!==null&&(!Number.isFinite(v)||v<=0))add("error",key,"Kích thước phòng phải là số dương.");
+ if(roomW!==null&&roomD!==null&&roomW>0&&roomD>0&&Number.isFinite(roomW*roomD))evidence.push("Kích thước phòng: "+roomW+" × "+roomD+" mm (do người dùng cung cấp, chưa đo từ ảnh)");
+ else add("unknown","roomDimensions","Chưa đủ kích thước phòng có thể kiểm chứng.");
+ for(const m of models){
+  const dims=String(m.dimensions||"").trim();
+  if(!dims)add("unknown","model:"+m.id,"Sản phẩm "+m.name+" chưa có kích thước xác minh.");
+  else {
+   const match=dims.match(/^\s*(\d+(?:[.,]\d+)?)\s*[x×*]\s*(\d+(?:[.,]\d+)?)(?:\s*[x×*]\s*(\d+(?:[.,]\d+)?))?\s*(mm|cm|m)\s*$/i);
+   if(!match)add("unknown","model:"+m.id,"Kích thước "+m.name+" chưa theo định dạng D × R [× C] và đơn vị mm/cm/m; không tự suy đoán.");
+   else{
+    const factor={mm:1,cm:10,m:1000}[match[4].toLowerCase()];
+    const d=Number(match[1].replace(",","."))*factor,w=Number(match[2].replace(",","."))*factor;
+    if(!Number.isFinite(d*w)||d<=0||w<=0)add("error","model:"+m.id,"Kích thước sản phẩm không hợp lệ.");
+    else {evidence.push(m.name+": "+d+" × "+w+" mm (khai báo, chưa xác minh catalogue)");if(roomW>0&&roomD>0&&d>roomD&&w>roomW&&d>roomW&&w>roomD)add("error","model:"+m.id,"Sản phẩm lớn hơn cả hai hướng phòng; cần kiểm tra lại kích thước.");}
+   }
+  }
+  if(!m.material||["Theo ảnh","Chưa xác minh"].includes(m.material))add("unknown","material:"+m.id,"Chưa xác minh vật liệu "+m.name+"; không tự suy ra thông số kỹ thuật.");
+  else evidence.push("Vật liệu khai báo "+m.name+": "+m.material+" (chưa xác minh chứng chỉ/đặc tính)");
+ }
+ if(!c.projectStandard)add("unknown","projectStandard","Chưa cung cấp quy chuẩn/tiêu chí nghiệm thu áp dụng; không xác nhận tuân thủ pháp lý.");
+ return {ok:!issues.some(x=>x.severity==="error"),issues,evidence};
+}
+
 export function getWarnings(c){
  const w=[];
+ for(const issue of auditDesign(c).issues)if(issue.severity==="error")w.push("Xung đột: "+issue.message);
  if(c.specificDateTime&&(!validLocalDate(c)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(c.localTime||"")))w.push("Ngày/giờ địa phương không hợp lệ hoặc chưa nhập đủ (ngày, tháng, năm, giờ).");
  if(c.mode==="edit"&&!c.masterImage)w.push("Image Editor cần Master Image trước khi render.");
  if(c.mode==="edit"&&c.locks.includes("Architecture")&&/\b(thay đổi kiến trúc|phá tường|di chuyển tường|đổi cửa sổ|đổi kết cấu)\b/i.test(c.brief||""))w.push("Xung đột: Architecture Lock và yêu cầu thay đổi kiến trúc.");
@@ -62,6 +101,7 @@ export function compilePrompt(c){
  const active=c.models.filter(m=>m.selected);
  const brains=selectBrains(c,c.expertMode,c.chosenBrains);
  const authority=designAuthority(c.space);
+ const audit=auditDesign(c);
  const refNames=active.map(m=>({id:m.id,name:m.name,category:m.category,brand:m.brand||"Unverified",sku:m.sku||"Unverified",target:m.target||"Not specified",material:m.material,dimensions:m.dimensions,structure:m.structure,application:m.application,properties:m.properties,notes:m.notes,references:m.references.map((r,i)=>({order:i+1,filename:r.name}))}));
  const lines=[
  "HOANGGIA AI — DESIGN INTELLIGENCE ENGINE V1.4",
@@ -82,6 +122,9 @@ export function compilePrompt(c){
  "DOMAIN AUTHORITY: "+authority.lead+" leads design decisions. Supporting brains may advise but cannot override space planning, dimensions, architecture, technical feasibility, or approved materials.",
  "AUTHORITY ORDER: verified project constraints and hard locks > domain lead > supporting material/lighting experts > photographic/cinematic presentation.",
  "DOMAIN QC: if inputs conflict with locked geometry, use or feasibility, flag the conflict rather than silently modifying the design.",
+ "DESIGN AUDIT EVIDENCE: "+(audit.evidence.join("; ")||"No verified dimensions provided."),
+ "DESIGN AUDIT ISSUES: "+audit.issues.map(i=>i.severity+": "+i.message).join("; "),
+ "VALIDATION RULE: user-supplied dimensions and standards are unverified until measured or supported by project documents. Never claim legal compliance or invent clearance requirements.",
  "ACTIVE BRAINS: "+brains.map(b=>b.name+" ("+b.experts.length+" expert roles)").join("; "),
  "EXPERT DECISION: assess spatial logic, product scale, material behavior, lighting physics, camera composition; check conflicts before execution.",
  "MASTER IMAGE: "+(c.masterImage?.name||"none"),
