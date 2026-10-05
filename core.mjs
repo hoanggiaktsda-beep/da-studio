@@ -1,4 +1,4 @@
-import {recommendVisual,resolvePhotoDirection,geographicDirection} from "./design-catalog.mjs";
+import {recommendVisual,resolvePhotoDirection,geographicDirection,validLocalDate} from "./design-catalog.mjs";
 export const BRAINS=[
  {id:"urban",name:"Urban & Master Planning",experts:["Urban Planning Director","Regional Planning","Master Planning","Urban Morphology","Transport & Mobility","Landscape Urbanist","Environmental Planner","Infrastructure Planner","Smart City Strategist","Urban Visualization"]},
  {id:"architecture",name:"Architecture",experts:["Chief Architect","Concept Architect","Building Typology","Facade Design","Structural Logic","Building Physics","Architectural Materials","Architectural Landscape","Preservation"]},
@@ -30,6 +30,7 @@ export function selectBrains({space="Nội thất",mode="create",models=[]},expe
 }
 export function getWarnings(c){
  const w=[];
+ if(c.specificDateTime&&(!validLocalDate(c)||!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(c.localTime||"")))w.push("Ngày/giờ địa phương không hợp lệ hoặc chưa nhập đủ (ngày, tháng, năm, giờ).");
  if(c.mode==="edit"&&!c.masterImage)w.push("Image Editor cần Master Image trước khi render.");
  if(!c.brief?.trim())w.push("Chưa có mô tả thiết kế — AI sẽ dựa trên phong cách đã chọn.");
  if(!uniqueModelID(c.models))w.push("Model ID bị trùng.");
