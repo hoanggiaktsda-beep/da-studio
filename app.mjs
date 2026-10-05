@@ -1,5 +1,5 @@
 import {BRAINS,CATEGORIES,LOCKS,FIELD_DEFS,createModel,getWarnings,compilePrompt,projectSnapshot,makeRenderPayload} from "./core.mjs";
-import {SPACE_CATALOG,STYLE_OPTIONS,CAMERA_OPTIONS,LIGHTING_OPTIONS,ASPECT_OPTIONS,FURNITURE_BRANDS,OUTPUT_TYPES,PHOTO_DIRECTIONS,resolvePhotoDirection,recommendVisual} from "./design-catalog.mjs";
+import {SPACE_CATALOG,STYLE_OPTIONS,CAMERA_OPTIONS,LIGHTING_OPTIONS,ASPECT_OPTIONS,FURNITURE_BRANDS,OUTPUT_TYPES,PHOTO_DIRECTIONS,resolvePhotoDirection,recommendVisual,SETTING_AREAS,WEATHER_CONTEXT,SEASON_CONTEXT,VIEW_CONTEXT,AUTO_CONTEXT} from "./design-catalog.mjs";
 import {IMAGE_PLATFORMS,adviseImageWorkflow,resolveImageAI} from "./image-advisor.mjs";
 const $=id=>document.getElementById(id);
 const vn={
@@ -13,8 +13,9 @@ const state={mode:"create",master:null,masterURL:null,models:[],expanded:null,ge
 const MAX_IMAGE_BYTES=5_000_000;
 const MAX_REQUEST_BYTES=23_000_000;
 const validImage=f=>!!f&&["image/jpeg","image/png","image/webp"].includes(f.type)&&f.size<=MAX_IMAGE_BYTES;
+const contextFields=["country","city","settingArea","surroundings","season","weather","orientation","contextNotes"];
 const fields=["space","zone","furnitureBrand","outputType","photoDirection","style","camera","lighting","brief","quality","expertMode","imageAI"];
-const liveSettings=()=>({mode:state.mode,space:$("space").value,zone:$("zone").value,furnitureBrand:$("furnitureBrand").value==="Thương hiệu khác (nhập tên)"?$("customBrand").value.trim():$("furnitureBrand").value,outputType:$("outputType").value,photoDirection:$("photoDirection").value,style:$("style").value,camera:$("camera").value,lighting:$("lighting").value,aspect:$("aspect").selectedOptions[0]?.textContent||"3:2 Ngang",brief:$("brief").value,size:$("aspect").value,quality:$("quality").value,expertMode:$("expertMode").value,imageAI:$("imageAI").value,chosenBrains:[...document.querySelectorAll("[data-brain]:checked")].map(x=>x.value),locks:[...document.querySelectorAll("[data-lock]:checked")].map(x=>x.value),masterImage:state.master,models:state.models});
+const liveSettings=()=>({country:$("country").value,city:$("city").value,settingArea:$("settingArea").value,surroundings:$("surroundings").value,season:$("season").value,weather:$("weather").value,orientation:$("orientation").value,contextNotes:$("contextNotes").value,specificDateTime:$("specificDateTime").checked,day:$("specificDateTime").checked?$("day").value:"",month:$("specificDateTime").checked?$("month").value:"",year:$("specificDateTime").checked?$("year").value:"",localTime:$("specificDateTime").checked?$("localTime").value:"",mode:state.mode,space:$("space").value,zone:$("zone").value,furnitureBrand:$("furnitureBrand").value==="Thương hiệu khác (nhập tên)"?$("customBrand").value.trim():$("furnitureBrand").value,outputType:$("outputType").value,photoDirection:$("photoDirection").value,style:$("style").value,camera:$("camera").value,lighting:$("lighting").value,aspect:$("aspect").selectedOptions[0]?.textContent||"3:2 Ngang",brief:$("brief").value,size:$("aspect").value,quality:$("quality").value,expertMode:$("expertMode").value,imageAI:$("imageAI").value,chosenBrains:[...document.querySelectorAll("[data-brain]:checked")].map(x=>x.value),locks:[...document.querySelectorAll("[data-lock]:checked")].map(x=>x.value),masterImage:state.master,models:state.models});
 const text=(tag,value,cls)=>{const x=document.createElement(tag);x.textContent=value;if(cls)x.className=cls;return x};
 const control=(tag,{value="",onChange,options=null,placeholder=""}={})=>{const e=document.createElement(tag);if(options){for(const v of options){const o=document.createElement("option");o.value=v;o.textContent=vi(v);e.append(o)}}if(tag==="input")e.type="text";e.value=value;e.placeholder=placeholder;e.addEventListener("input",()=>onChange?.(e.value));return e};
 function inputLabel(label,element){const l=text("label",label);l.append(element);return l}
@@ -101,7 +102,7 @@ async function render(){
  }catch(e){if(!controller.signal.aborted)showStatus("Không tạo được ảnh: "+(e.message||String(e)),true)}finally{if(state.renderController===controller)state.renderController=null;drawAdvisor()}
 }
 function populate(select,values,keep){const old=keep?select.value:null;select.replaceChildren();for(const v of values){const option=document.createElement("option");option.value=v;option.textContent=vi(v);select.append(option)}if(old&&values.includes(old))select.value=old}
-function updateZone(){populate($("zone"),SPACE_CATALOG[$("space").value]||SPACE_CATALOG["Nội thất"],false)}
+function updateZone(){populate($("zone"),SPACE_CATALOG[$("space").value]||SPACE_CATALOG["Nội thất"],false);const old=$("surroundings").value;populate($("surroundings"),VIEW_CONTEXT[$("space").value]||VIEW_CONTEXT["Nội thất"],false);if([...$("surroundings").options].some(o=>o.value===old))$("surroundings").value=old;$("surroundingsLabel").firstChild.textContent=$("space").value==="Nội thất"?"Bối cảnh ngoài cửa sổ / xung quanh":$("space").value==="Kiến trúc"?"Cảnh quan xung quanh":$("space").value==="Cảnh quan"?"Sinh thái và cảnh quan":"Bối cảnh khu vực quy hoạch"}
 for(const group of [...new Set(IMAGE_PLATFORMS.map(p=>p.group))]){const g=document.createElement("optgroup");g.label=group;for(const p of IMAGE_PLATFORMS.filter(p=>p.group===group)){const o=document.createElement("option");o.value=p.id;o.textContent=p.name;g.append(o)}$("imageAI").append(g)}
 $("imageAI").addEventListener("change",drawAdvisor);
 $("copyForAI").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(compile());showStatus("Đã sao chép prompt cho AI được chọn.")}catch(e){showStatus("Không thể sao chép: "+e.message,true)}});
@@ -111,6 +112,9 @@ $("furnitureBrand").addEventListener("change",()=>{$("customBrandWrap").hidden=$
 populate($("outputType"),OUTPUT_TYPES,false);populate($("photoDirection"),PHOTO_DIRECTIONS,false);
 function updatePhotoAdvice(){const c=liveSettings(),p=resolvePhotoDirection(c);$("photoAdvice").textContent=p.real?"Đề xuất: "+p.selected+". Ưu tiên phối cảnh thẳng, ánh sáng tự nhiên, vật liệu thật, bóng đổ đúng vật lý, hậu kỳ tinh tế; không bảo đảm ảnh AI không thể bị nhận diện.":"Giữ đặc trưng kỹ thuật của loại đầu ra đã chọn, không ép tất cả thành ảnh chụp."}
 for(const id of ["outputType","photoDirection","space"])$(id).addEventListener("change",updatePhotoAdvice);
+populate($("settingArea"),SETTING_AREAS,false);populate($("season"),SEASON_CONTEXT,false);populate($("weather"),WEATHER_CONTEXT,false);
+$("specificDateTime").addEventListener("change",()=>{$("dateTimeFields").hidden=!$("specificDateTime").checked});
+for(const id of ["settingArea","surroundings"])$(id).addEventListener("change",()=>{$("contextNotesLabel").hidden=![$("settingArea").value,$("surroundings").value].includes("Khác (mô tả)")});
 populate($("style"),STYLE_OPTIONS,false);populate($("camera"),CAMERA_OPTIONS,false);populate($("lighting"),LIGHTING_OPTIONS,false);updateZone();
 for(const [label,value] of ASPECT_OPTIONS){const option=document.createElement("option");option.value=value;option.textContent=label;$("aspect").append(option)}
 function updateRenderHints(){
@@ -142,6 +146,10 @@ $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)retu
  for(const item of v.models)if(!item||typeof item!=="object"||Array.isArray(item))throw Error("Model không hợp lệ");if(state.renderController){state.renderController.abort();state.renderController=null}for(const m of state.models)revokeRefs(m);state.models=v.models.map(()=>null).map((_,i)=>{const o=v.models[i],m=createModel();return {...m,...o,id:m.id,references:[],properties:o.properties&&typeof o.properties==="object"&&!Array.isArray(o.properties)?o.properties:{},notes:(o.notes||"")+(o.references?.length?" [Cần tải lại ảnh gốc sau khi nhập JSON.]":"")}});if(typeof v.space==="string"&&SPACE_CATALOG[v.space]){$("space").value=v.space;updateZone()}
  for(const key of fields){if(typeof v[key]==="string"&&[...$(key).options||[]].length){if([...$(key).options].some(x=>x.value===v[key]))$(key).value=v[key]}else if(key==="brief"&&typeof v[key]==="string")$(key).value=v[key]}
  if(typeof v.furnitureBrand==="string"){const known=[...$("furnitureBrand").options].some(o=>o.value===v.furnitureBrand);if(!known&&v.furnitureBrand){$("furnitureBrand").value="Thương hiệu khác (nhập tên)";$("customBrand").value=v.furnitureBrand;$("customBrandWrap").hidden=false}else{$("furnitureBrand").value=v.furnitureBrand||"Không áp dụng";$("customBrand").value="";$("customBrandWrap").hidden=true}}
+ for(const id of contextFields){if(typeof v[id]==="string"){const el=$(id);if(el.tagName==="SELECT"){if([...el.options].some(o=>o.value===v[id]))el.value=v[id]}else el.value=v[id]}}
+ $("specificDateTime").checked=v.specificDateTime===true;$("dateTimeFields").hidden=!$("specificDateTime").checked;
+ for(const id of ["day","month","year","localTime"])$(id).value=v[id]??"";
+ $("contextNotesLabel").hidden=![$("settingArea").value,$("surroundings").value].includes("Khác (mô tả)");
  if(Array.isArray(v.chosenBrains)){for(const cb of document.querySelectorAll("[data-brain]"))cb.checked=v.chosenBrains.includes(cb.value)}
  if(Array.isArray(v.locks)){for(const cb of document.querySelectorAll("[data-lock]"))cb.checked=v.locks.includes(cb.value)}
  $("manualExperts").hidden=$("expertMode").value!=="manual";
@@ -156,6 +164,10 @@ function startNewProject(){
  if(state.renderController){state.renderController.abort();state.renderController=null}
  for(const m of state.models)revokeRefs(m);
  state.models=[];state.expanded=null;state.generated=null;
+ for(const id of ["country","city"])$(id).value=AUTO_CONTEXT;
+ for(const id of ["settingArea","surroundings","season","weather","orientation"])$(id).selectedIndex=0;
+ $("contextNotes").value="";$("contextNotesLabel").hidden=true;$("specificDateTime").checked=false;$("dateTimeFields").hidden=true;
+ for(const id of ["day","month","year","localTime"])$(id).value="";
  updateMaster(null);
  $("space").selectedIndex=0;updateZone();
  for(const id of ["style","camera","lighting","aspect","imageAI","expertMode","outputType","photoDirection"])$(id).selectedIndex=0;
