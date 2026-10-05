@@ -50,10 +50,10 @@ export function auditLayout(c={}){
  const hasRoom=c.roomWidthMm!==""&&c.roomDepthMm!==""&&Number.isFinite(roomW)&&Number.isFinite(roomD)&&roomW>0&&roomD>0;
  const boxes=[];
  for(const item of items){
-  const id=String(item.id||item.name||"unknown");
-  const raw=[item.xMm,item.yMm,item.widthMm,item.depthMm];
+  const id=String(item?.id||item?.name||"unknown");
+  const raw=[item?.xMm,item?.yMm,item?.widthMm,item?.depthMm];
   if(raw.some(v=>v===""||v===null||v===undefined)||raw.some(v=>!Number.isFinite(Number(v)))){
-   issues.push({severity:"unknown",field:"layout:"+id,message:"Thiếu tọa độ hoặc kích thước mặt bằng của "+id});continue;
+   issues.push({severity:"error",field:"layout:"+id,message:"Dữ liệu mặt bằng thiếu hoặc sai tọa độ/kích thước của "+id});continue;
   }
   const [x,y,w,d]=raw.map(Number);
   if(x<0||y<0||w<=0||d<=0){issues.push({severity:"error",field:"layout:"+id,message:"Tọa độ/kích thước không hợp lệ: "+id});continue;}
