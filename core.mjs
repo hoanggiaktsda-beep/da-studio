@@ -49,8 +49,37 @@ export function auditLayout(c={}){
  const roomW=Number(c.roomWidthMm),roomD=Number(c.roomDepthMm);
  const hasRoom=c.roomWidthMm!==""&&c.roomDepthMm!==""&&Number.isFinite(roomW)&&Number.isFinite(roomD)&&roomW>0&&roomD>0;
  const boxes=[];
+ const seen=new Set();
+ const obstacles=Array.isArray(c.layoutObstacles)?c.layoutObstacles:[];
+ const doors=Array.isArray(c.layoutDoors)?c.layoutDoors:[];
+ for(const door of doors){
+  const id=String(door?.id||"cửa");
+  const raw=[door?.xMm,door?.yMm,door?.widthMm,door?.depthMm];
+  if(raw.some(v=>v===""||v===null||v===undefined||!Number.isFinite(Number(v)))||Number(raw[0])<0||Number(raw[1])<0||Number(raw[2])<=0||Number(raw[3])<=0){
+   issues.push({severity:"error",field:"door:"+id,message:"Vùng mở cửa thiếu hoặc sai kích thước: "+id});continue;
+  }
+  const [x,y,w,d]=raw.map(Number);
+  if(hasRoom&&(x+w>roomW||y+d>roomD))issues.push({severity:"error",field:"door:"+id,message:"Vùng mở cửa vượt ranh giới phòng: "+id});
+  // Door swing clearance is represented by a conservative rectangular envelope,
+  // supplied by the designer, not inferred from hinge or photo.
+  boxes.push({id:"cửa:"+id,x,y,w,d,door:true});
+ }
+
+ for(const obstacle of obstacles){
+  const name=String(obstacle?.id||"vật cản");
+  const v=[obstacle?.xMm,obstacle?.yMm,obstacle?.widthMm,obstacle?.depthMm];
+  if(v.some(n=>n===""||n===null||n===undefined||!Number.isFinite(Number(n)))||Number(v[0])<0||Number(v[1])<0||Number(v[2])<=0||Number(v[3])<=0){
+   issues.push({severity:"error",field:"obstacle:"+name,message:"Vật cản có tọa độ hoặc kích thước không hợp lệ: "+name});continue;
+  }
+  const [x,y,w,d]=v.map(Number);
+  if(hasRoom&&(x+w>roomW||y+d>roomD))issues.push({severity:"error",field:"obstacle:"+name,message:"Vật cản vượt ranh giới phòng: "+name});
+  boxes.push({id:name,x,y,w,d,obstacle:true});
+ }
+ if(c.layoutMinimumGapMm!==""&&c.layoutMinimumGapMm!==undefined&&c.layoutMinimumGapMm!==null&&(!Number.isFinite(Number(c.layoutMinimumGapMm))||Number(c.layoutMinimumGapMm)<0))issues.push({severity:"error",field:"layoutMinimumGapMm",message:"Ngưỡng khoảng cách dự án phải là số không âm."});
  for(const item of items){
   const id=String(item?.id||item?.name||"unknown");
+  if(seen.has(id))issues.push({severity:"error",field:"layout:"+id,message:"Trùng mã sản phẩm mặt bằng: "+id});
+  seen.add(id);
   const raw=[item?.xMm,item?.yMm,item?.widthMm,item?.depthMm];
   if(raw.some(v=>v===""||v===null||v===undefined)||raw.some(v=>!Number.isFinite(Number(v)))){
    issues.push({severity:"error",field:"layout:"+id,message:"Dữ liệu mặt bằng thiếu hoặc sai tọa độ/kích thước của "+id});continue;
@@ -70,11 +99,13 @@ export function auditLayout(c={}){
    const gap=Math.hypot(dx,dy);
    evidence.push("Khoảng cách biên "+a.id+" / "+b.id+": "+Math.round(gap)+" mm (mặt bằng giả định)");
    const min=c.layoutMinimumGapMm;
-   if(min!==""&&min!==undefined&&min!==null&&Number.isFinite(Number(min))&&Number(min)>=0&&gap<Number(min))
+   if(!a.obstacle&&!b.obstacle&&!a.door&&!b.door&&min!==""&&min!==undefined&&min!==null&&Number.isFinite(Number(min))&&Number(min)>=0&&gap<Number(min))
     issues.push({severity:"error",field:"pair:"+a.id+":"+b.id,message:"Khoảng cách "+a.id+" / "+b.id+" nhỏ hơn ngưỡng dự án."});
   }
  }
- if(items.length&&!hasRoom)issues.push({severity:"unknown",field:"layoutRoom",message:"Chưa đủ kích thước phòng để xác minh vị trí sản phẩm."});
+ if((items.length||obstacles.length||doors.length)&&!hasRoom)issues.push({severity:"unknown",field:"layoutRoom",message:"Chưa đủ kích thước phòng để xác minh vị trí sản phẩm."});
+ if(items.length&&boxes.length&&hasRoom)evidence.push("Kiểm tra ranh giới trên mặt bằng chữ nhật "+roomW+" × "+roomD+" mm; chưa tính cửa, tường, hướng mở, lối thoát hiểm.");
+ if(doors.length)evidence.push("Vùng mở cửa do người dùng khai báo là bao hình chữ nhật, không tự tính cung quay cánh cửa.");
  if(!items.length)issues.push({severity:"unknown",field:"layoutItems",message:"Chưa có tọa độ mặt bằng sản phẩm; không thể xác nhận bố trí, va chạm hay khoảng cách."});
  return {ok:!issues.some(i=>i.severity==="error"),issues,evidence};
 }
