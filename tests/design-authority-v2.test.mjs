@@ -61,3 +61,11 @@ test("V2.1 detects furniture collisions with fixed columns",()=>{
  assert.ok(auditLayout(c).issues.some(i=>i.field==="pair:column:sofa"));
  assert.equal(auditLayout({...c,layoutItems:[item("sofa",1800,200,1200,800)]}).ok,true);
 });
+
+test("V2.2 door swing clearance blocks overlapping furniture",()=>{
+ const sofa={id:"sofa",xMm:300,yMm:300,widthMm:900,depthMm:500};
+ const door={id:"entrance",xMm:0,yMm:0,widthMm:900,depthMm:900};
+ const base={roomWidthMm:4000,roomDepthMm:3000,layoutItems:[sofa],layoutDoors:[door]};
+ assert.ok(auditLayout(base).issues.some(i=>i.field==="pair:cửa:entrance:sofa"));
+ assert.equal(auditLayout({...base,layoutItems:[{...sofa,xMm:1500}]}).ok,true);
+});
