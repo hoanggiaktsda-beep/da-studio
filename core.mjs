@@ -43,6 +43,8 @@ export function getWarnings(c){
  const w=[];
  if(c.specificDateTime&&(!validLocalDate(c)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(c.localTime||"")))w.push("Ngày/giờ địa phương không hợp lệ hoặc chưa nhập đủ (ngày, tháng, năm, giờ).");
  if(c.mode==="edit"&&!c.masterImage)w.push("Image Editor cần Master Image trước khi render.");
+ if(c.mode==="edit"&&c.locks.includes("Architecture")&&/\b(thay đổi kiến trúc|phá tường|di chuyển tường|đổi cửa sổ|đổi kết cấu)\b/i.test(c.brief||""))w.push("Xung đột: Architecture Lock và yêu cầu thay đổi kiến trúc.");
+ if(c.mode==="edit"&&c.locks.includes("Geometry")&&/\b(thay đổi kích thước|nới rộng phòng|thu hẹp phòng|đổi chiều cao trần)\b/i.test(c.brief||""))w.push("Xung đột: Geometry Lock và yêu cầu thay đổi hình học.");
  if(!c.brief?.trim())w.push("Chưa có mô tả thiết kế — AI sẽ dựa trên phong cách đã chọn.");
  if(!uniqueModelID(c.models))w.push("Model ID bị trùng.");
  const active=c.models.filter(m=>m.selected); 
