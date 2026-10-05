@@ -1,7 +1,7 @@
 name: DA Studio CI
 on:
   push:
-    branches: [main, "develop/**"]
+    branches: [main, "develop/**", "feature/**"]
   pull_request:
     branches: [main]
 permissions:
