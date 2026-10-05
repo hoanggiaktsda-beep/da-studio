@@ -49,8 +49,12 @@ export function auditLayout(c={}){
  const roomW=Number(c.roomWidthMm),roomD=Number(c.roomDepthMm);
  const hasRoom=c.roomWidthMm!==""&&c.roomDepthMm!==""&&Number.isFinite(roomW)&&Number.isFinite(roomD)&&roomW>0&&roomD>0;
  const boxes=[];
+ const seen=new Set();
+ if(c.layoutMinimumGapMm!==""&&c.layoutMinimumGapMm!==undefined&&c.layoutMinimumGapMm!==null&&(!Number.isFinite(Number(c.layoutMinimumGapMm))||Number(c.layoutMinimumGapMm)<0))issues.push({severity:"error",field:"layoutMinimumGapMm",message:"Ngưỡng khoảng cách dự án phải là số không âm."});
  for(const item of items){
   const id=String(item?.id||item?.name||"unknown");
+  if(seen.has(id))issues.push({severity:"error",field:"layout:"+id,message:"Trùng mã sản phẩm mặt bằng: "+id});
+  seen.add(id);
   const raw=[item?.xMm,item?.yMm,item?.widthMm,item?.depthMm];
   if(raw.some(v=>v===""||v===null||v===undefined)||raw.some(v=>!Number.isFinite(Number(v)))){
    issues.push({severity:"error",field:"layout:"+id,message:"Dữ liệu mặt bằng thiếu hoặc sai tọa độ/kích thước của "+id});continue;
@@ -75,6 +79,7 @@ export function auditLayout(c={}){
   }
  }
  if(items.length&&!hasRoom)issues.push({severity:"unknown",field:"layoutRoom",message:"Chưa đủ kích thước phòng để xác minh vị trí sản phẩm."});
+ if(items.length&&boxes.length&&hasRoom)evidence.push("Kiểm tra ranh giới trên mặt bằng chữ nhật "+roomW+" × "+roomD+" mm; chưa tính cửa, tường, hướng mở, lối thoát hiểm.");
  if(!items.length)issues.push({severity:"unknown",field:"layoutItems",message:"Chưa có tọa độ mặt bằng sản phẩm; không thể xác nhận bố trí, va chạm hay khoảng cách."});
  return {ok:!issues.some(i=>i.severity==="error"),issues,evidence};
 }
