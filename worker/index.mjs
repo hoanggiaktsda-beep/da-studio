@@ -22,7 +22,9 @@ export async function handleRequest(request,env,fetcher=fetch){
  if(!["1024x1024","1024x1536","1536x1024"].includes(outputSize))return bad("Unsupported image size",400,cors);
  if(!["low","medium","high"].includes(quality))return bad("Unsupported image quality",400,cors);
  if(model!=="gpt-image-2")return bad("Model not allowed",400,cors);
- for(const r of images){if(typeof r.image_url!=="string"||!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(r.image_url)||r.image_url.length>8_000_000)return bad("Invalid or oversized input image",400,cors)}
+ for(const r of images){if(typeof r.image_url!=="string"||!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(r.image_url)||r.image_url.length>6_800_000)return bad("Invalid or oversized input image",400,cors)}
+ const estimatedBodySize=JSON.stringify(data).length;
+ if(estimatedBodySize>23_000_000)return bad("Payload too large",413,cors);
  const hasImages=images.length>0;
  const endpoint=hasImages?"https://api.openai.com/v1/images/edits":"https://api.openai.com/v1/images/generations";
  const requestBody=hasImages?{model,prompt,images:images.map(r=>({image_url:r.image_url})),quality,size:outputSize,output_format:"png"}:{model,prompt,quality,size:outputSize,output_format:"png",n:1};
