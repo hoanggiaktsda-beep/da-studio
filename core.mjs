@@ -134,7 +134,7 @@ export function auditDesign(c={}){
     const factor={mm:1,cm:10,m:1000}[match[4].toLowerCase()];
     const d=Number(match[1].replace(",","."))*factor,w=Number(match[2].replace(",","."))*factor;
     if(!Number.isFinite(d*w)||d<=0||w<=0)add("error","model:"+m.id,"Kích thước sản phẩm không hợp lệ.");
-    else {evidence.push(m.name+": "+d+" × "+w+" mm (khai báo, chưa xác minh catalogue)");if(roomW>0&&roomD>0&&d>roomD&&w>roomW&&d>roomW&&w>roomD)add("error","model:"+m.id,"Sản phẩm lớn hơn cả hai hướng phòng; cần kiểm tra lại kích thước.");}
+    else {evidence.push(m.name+": "+d+" × "+w+" mm (khai báo, chưa xác minh catalogue)");if(roomW>0&&roomD>0&&((d>roomD||w>roomW)&&(d>roomW||w>roomD)))add("error","model:"+m.id,"Sản phẩm lớn hơn cả hai hướng phòng; cần kiểm tra lại kích thước.");}
    }
   }
   if(!m.material||["Theo ảnh","Chưa xác minh"].includes(m.material))add("unknown","material:"+m.id,"Chưa xác minh vật liệu "+m.name+"; không tự suy ra thông số kỹ thuật.");
@@ -150,8 +150,8 @@ export function getWarnings(c){
  for(const issue of auditDesign(c).issues)if(issue.severity==="error")w.push("Xung đột: "+issue.message);
  if(c.specificDateTime&&(!validLocalDate(c)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(c.localTime||"")))w.push("Ngày/giờ địa phương không hợp lệ hoặc chưa nhập đủ (ngày, tháng, năm, giờ).");
  if(c.mode==="edit"&&!c.masterImage)w.push("Image Editor cần Master Image trước khi render.");
- if(c.mode==="edit"&&c.locks.includes("Architecture")&&/\b(thay đổi kiến trúc|phá tường|di chuyển tường|đổi cửa sổ|đổi kết cấu)\b/i.test(c.brief||""))w.push("Xung đột: Architecture Lock và yêu cầu thay đổi kiến trúc.");
- if(c.mode==="edit"&&c.locks.includes("Geometry")&&/\b(thay đổi kích thước|nới rộng phòng|thu hẹp phòng|đổi chiều cao trần)\b/i.test(c.brief||""))w.push("Xung đột: Geometry Lock và yêu cầu thay đổi hình học.");
+ if(c.mode==="edit"&&c.locks.includes("Architecture")&&/(thay đổi kiến trúc|phá tường|di chuyển tường|đổi cửa sổ|đổi kết cấu)/i.test(c.brief||""))w.push("Xung đột: Architecture Lock và yêu cầu thay đổi kiến trúc.");
+ if(c.mode==="edit"&&c.locks.includes("Geometry")&&/(thay đổi kích thước|nới rộng phòng|thu hẹp phòng|đổi chiều cao trần)/i.test(c.brief||""))w.push("Xung đột: Geometry Lock và yêu cầu thay đổi hình học.");
  if(!c.brief?.trim())w.push("Chưa có mô tả thiết kế — AI sẽ dựa trên phong cách đã chọn.");
  if(!uniqueModelID(c.models))w.push("Model ID bị trùng.");
  const active=c.models.filter(m=>m.selected); 
