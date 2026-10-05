@@ -42,6 +42,42 @@ export function selectBrains({space="Nội thất",mode="create",models=[]},expe
 
 // Structured evidence-based design audit. Thresholds are explicitly project-defined,
 // not universal building codes or automatically measured from photos.
+// Spatial relationships are calculated only from explicit plan coordinates in mm.
+// Rectangular, axis-aligned footprints are a preliminary check, not a CAD solver.
+export function auditLayout(c={}){
+ const issues=[],evidence=[],items=Array.isArray(c.layoutItems)?c.layoutItems:[];
+ const roomW=Number(c.roomWidthMm),roomD=Number(c.roomDepthMm);
+ const hasRoom=c.roomWidthMm!==""&&c.roomDepthMm!==""&&Number.isFinite(roomW)&&Number.isFinite(roomD)&&roomW>0&&roomD>0;
+ const boxes=[];
+ for(const item of items){
+  const id=String(item.id||item.name||"unknown");
+  const raw=[item.xMm,item.yMm,item.widthMm,item.depthMm];
+  if(raw.some(v=>v===""||v===null||v===undefined)||raw.some(v=>!Number.isFinite(Number(v)))){
+   issues.push({severity:"unknown",field:"layout:"+id,message:"Thiếu tọa độ hoặc kích thước mặt bằng của "+id});continue;
+  }
+  const [x,y,w,d]=raw.map(Number);
+  if(x<0||y<0||w<=0||d<=0){issues.push({severity:"error",field:"layout:"+id,message:"Tọa độ/kích thước không hợp lệ: "+id});continue;}
+  const b={id,x,y,w,d};boxes.push(b);
+  if(hasRoom&&(x+w>roomW||y+d>roomD))issues.push({severity:"error",field:"layout:"+id,message:"Sản phẩm "+id+" vượt ranh giới phòng."});
+ }
+ for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){
+  const a=boxes[i],b=boxes[j];
+  const dx=Math.max(0,Math.max(a.x,b.x)-Math.min(a.x+a.w,b.x+b.w));
+  const dy=Math.max(0,Math.max(a.y,b.y)-Math.min(a.y+a.d,b.y+b.d));
+  const overlap=a.x<b.x+b.w&&b.x<a.x+a.w&&a.y<b.y+b.d&&b.y<a.y+a.d;
+  if(overlap)issues.push({severity:"error",field:"pair:"+a.id+":"+b.id,message:"Hai vùng chiếm chỗ giao nhau: "+a.id+" / "+b.id});
+  else {
+   const gap=Math.hypot(dx,dy);
+   evidence.push("Khoảng cách biên "+a.id+" / "+b.id+": "+Math.round(gap)+" mm (mặt bằng giả định)");
+   const min=c.layoutMinimumGapMm;
+   if(min!==""&&min!==undefined&&min!==null&&Number.isFinite(Number(min))&&Number(min)>=0&&gap<Number(min))
+    issues.push({severity:"error",field:"pair:"+a.id+":"+b.id,message:"Khoảng cách "+a.id+" / "+b.id+" nhỏ hơn ngưỡng dự án."});
+  }
+ }
+ if(items.length&&!hasRoom)issues.push({severity:"unknown",field:"layoutRoom",message:"Chưa đủ kích thước phòng để xác minh vị trí sản phẩm."});
+ if(!items.length)issues.push({severity:"unknown",field:"layoutItems",message:"Chưa có tọa độ mặt bằng sản phẩm; không thể xác nhận bố trí, va chạm hay khoảng cách."});
+ return {ok:!issues.some(i=>i.severity==="error"),issues,evidence};
+}
 export function auditDesign(c={}){
  const issues=[],evidence=[],models=(c.models||[]).filter(m=>m.selected);
  const add=(severity,field,message)=>issues.push({severity,field,message});
@@ -73,6 +109,7 @@ export function auditDesign(c={}){
   if(!m.material||["Theo ảnh","Chưa xác minh"].includes(m.material))add("unknown","material:"+m.id,"Chưa xác minh vật liệu "+m.name+"; không tự suy ra thông số kỹ thuật.");
   else evidence.push("Vật liệu khai báo "+m.name+": "+m.material+" (chưa xác minh chứng chỉ/đặc tính)");
  }
+ const layout=auditLayout(c);issues.push(...layout.issues);evidence.push(...layout.evidence);
  if(!c.projectStandard)add("unknown","projectStandard","Chưa cung cấp quy chuẩn/tiêu chí nghiệm thu áp dụng; không xác nhận tuân thủ pháp lý.");
  return {ok:!issues.some(x=>x.severity==="error"),issues,evidence};
 }
