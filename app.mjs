@@ -55,13 +55,13 @@ function drawAdvisor(){
 
  $("advisorSummary").textContent="HG đề xuất: "+advice.reason;
  $("advisorSteps").replaceChildren(...advice.steps.map((v,i)=>{const step=text("div","","advisor-step");step.append(text("b",String(i+1).padStart(2,"0")),text("span",v));return step}));
- $("advisorPlatforms").replaceChildren(...IMAGE_PLATFORMS.map(p=>{
+ $("advisorPlatforms").replaceChildren(...IMAGE_PLATFORMS.filter(p=>advice.recommendations.includes(p.id)||p.id===choice.platform.id).map(p=>{
  const card=text("article","","advisor-platform");
  if(advice.recommendations.includes(p.id))card.classList.add("recommended");
  const title=text("div","","advisor-title");title.append(text("strong",p.name));
  if(advice.recommendations.includes(p.id))title.append(text("small","HG ĐỀ XUẤT"));
  card.append(title,text("p",p.focus),text("small",p.note));
- const link=text("a","TÌM HIỂU ↗","advisor-link");link.href=p.url;link.target="_blank";link.rel="noopener noreferrer";card.append(link);return card;
+ const link=text("a","MỞ NỀN TẢNG ↗","advisor-link");link.href=p.url;link.target="_blank";link.rel="noopener noreferrer";card.append(link);return card;
  }));
 }
 function showStatus(msg,error=false){$("renderStatus").textContent=msg;$("renderStatus").style.color=error?"#efa6a0":""}
@@ -93,7 +93,7 @@ async function render(){
 }
 function populate(select,values,keep){const old=keep?select.value:null;select.replaceChildren();for(const v of values){const option=document.createElement("option");option.value=v;option.textContent=vi(v);select.append(option)}if(old&&values.includes(old))select.value=old}
 function updateZone(){populate($("zone"),SPACE_CATALOG[$("space").value]||SPACE_CATALOG["Nội thất"],false)}
-for(const p of IMAGE_PLATFORMS){const o=document.createElement("option");o.value=p.id;o.textContent=p.name;$("imageAI").append(o)}
+for(const group of [...new Set(IMAGE_PLATFORMS.map(p=>p.group))]){const g=document.createElement("optgroup");g.label=group;for(const p of IMAGE_PLATFORMS.filter(p=>p.group===group)){const o=document.createElement("option");o.value=p.id;o.textContent=p.name;g.append(o)}$("imageAI").append(g)}
 $("imageAI").addEventListener("change",drawAdvisor);
 $("copyForAI").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(compile());showStatus("Đã sao chép prompt cho AI được chọn.")}catch(e){showStatus("Không thể sao chép: "+e.message,true)}});
 populate($("style"),STYLE_OPTIONS,false);populate($("camera"),CAMERA_OPTIONS,false);populate($("lighting"),LIGHTING_OPTIONS,false);updateZone();
