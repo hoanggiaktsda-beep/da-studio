@@ -46,7 +46,7 @@ return {recommendations,steps,reason:edit?"Ưu tiên công cụ hỗ trợ chỉ
 export function resolveImageAI(selection,context){
  const advice=adviseImageWorkflow(context);
  const suggested=advice.recommendations[0];
- const selected=selection==="auto"?suggested:selection;
+ const selected=selection==="auto"?"openai":selection;
  const platform=IMAGE_PLATFORMS.find(p=>p.id===selected)||IMAGE_PLATFORMS[0];
  return {platform,automatic:selection==="auto",suggested,canRender:platform.id==="openai"};
 }
