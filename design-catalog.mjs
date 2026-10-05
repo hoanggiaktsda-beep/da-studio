@@ -27,3 +27,23 @@ export function resolvePhotoDirection(c){
  const selected=c.photoDirection&&c.photoDirection!=="HG tự đề xuất"?c.photoDirection:(c.space==="Kiến trúc"?"Ảnh kiến trúc thực tế — tự nhiên":c.space==="Nội thất"?"Tạp chí kiến trúc cao cấp":"Ảnh kiến trúc thực tế — tự nhiên");
  return {real,selected,guide:real?"Professional architectural photographer direction: realistic full-frame camera response, plausible 24–50mm lens, level verticals, human-eye perspective, accurate white balance and exposure, natural window light and practical fixtures, physically plausible shadow softness and reflections, subtle sensor grain, credible material imperfections and lived-in styling. Avoid plastic textures, over-sharpening, excessive HDR, impossible geometry, duplicated props, artificial glow and exaggerated depth of field. Photographic plausibility is a visual target, not proof that the image is a real photograph.":"Respect the chosen visual medium and its characteristic rendering; retain correct scale, perspective, material behavior and lighting."};
 }
+
+export const AUTO_CONTEXT="HG tự xử lý";
+export const SETTING_AREAS=["HG tự xử lý","Trung tâm thành phố","Khu dân cư đô thị","Ngoại ô","Vùng quê","Miền núi","Đồi cao","Thung lũng","Rừng","Ven sông","Ven hồ","Ven biển","Đảo","Cao nguyên","Sa mạc","Khu phố cổ","Khu di sản","Khu công nghiệp","Khác (mô tả)"];
+export const WEATHER_CONTEXT=["HG tự xử lý","Trời quang","Nắng nhẹ","Nắng mạnh","Nhiều mây","Âm u","Mưa nhẹ","Mưa lớn","Sương mù","Tuyết","Sau cơn mưa"];
+export const SEASON_CONTEXT=["HG tự xử lý","Mùa xuân","Mùa hè","Mùa thu","Mùa đông","Mùa mưa","Mùa khô"];
+export const VIEW_CONTEXT={
+ "Nội thất":["HG tự xử lý","Giữ nguyên bối cảnh qua cửa sổ","Phố đô thị qua cửa sổ","Vườn cây xanh","Sân trong","Cảnh núi","Cảnh biển","Cảnh hồ","Cảnh sông","Cảnh đồng quê","Cảnh đảo","Không nhìn thấy bên ngoài","Khác (mô tả)"],
+ "Kiến trúc":["HG tự xử lý","Cảnh quan đô thị hiện hữu","Phố cổ","Khu biệt thự","Đồi núi","Rừng cây","Đồng quê","Ven biển","Đảo","Ven hồ","Ven sông","Cảnh quan nhiệt đới","Khác (mô tả)"],
+ "Cảnh quan":["HG tự xử lý","Thảm thực vật bản địa","Công viên đô thị","Vườn biệt thự","Vùng núi","Đồng quê","Ven biển","Đảo","Ven sông","Ven hồ","Khác (mô tả)"],
+ "Quy hoạch đô thị":["HG tự xử lý","Đô thị mật độ cao","Khu dân cư hiện hữu","Phố cổ","Đô thị ven biển","Đô thị ven sông","Đô thị miền núi","Vùng nông thôn","Đảo","Vùng sinh thái","Khác (mô tả)"]
+};
+export function geographicDirection(c={}){
+ const clean=v=>typeof v==="string"&&v.trim()&&v.trim()!==AUTO_CONTEXT?v.trim():null;
+ const country=clean(c.country),city=clean(c.city),area=clean(c.settingArea),scene=clean(c.surroundings),weather=clean(c.weather),season=clean(c.season),orientation=clean(c.orientation);
+ const date=[c.year,c.month,c.day].every(x=>Number.isInteger(Number(x))&&Number(x)>0)?new Date(Date.UTC(Number(c.year),Number(c.month)-1,Number(c.day))):null;
+ const dateOK=date&&date.getUTCFullYear()===Number(c.year)&&date.getUTCMonth()+1===Number(c.month)&&date.getUTCDate()===Number(c.day);
+ const time=/^([01]\d|2[0-3]):[0-5]\d$/.test(c.localTime||"")?c.localTime:null;
+ const details=[country&&"Quốc gia: "+country,city&&"Thành phố: "+city,area&&"Địa hình/khu vực: "+area,scene&&"Bối cảnh nhìn thấy: "+scene,season&&"Mùa: "+season,weather&&"Thời tiết mong muốn: "+weather,dateOK&&"Ngày địa phương: "+[c.year,String(c.month).padStart(2,"0"),String(c.day).padStart(2,"0")].join("-"),time&&"Giờ địa phương: "+time,orientation&&"Hướng nhìn/công trình: "+orientation].filter(Boolean);
+ return ["Use site-specific, plausible local architecture, vegetation, terrain, urban density, cultural details, seasonal daylight and environmental context. "+(details.length?details.join("; "):"HG chooses a visually appropriate plausible context."),"Interior: the view outside windows and daylight must match the site; Architecture: surrounding landscape, streets and terrain must match; Landscape: local ecology and plants must fit; Urban planning: settlement morphology and infrastructure must fit.","Do not invent a verified real address, live weather, exact sun position, landmarks or site-specific facts. Exact solar angle and weather require verified coordinates, orientation, date/time and data. Preserve master image geography, views, camera and locked elements in edit mode unless explicitly authorized."].join(" ");
+}
