@@ -53,3 +53,11 @@ test("V2.1 rejects duplicate plan identifiers and invalid gap thresholds",()=>{
  assert.equal(auditLayout({roomWidthMm:3000,roomDepthMm:3000,layoutItems:items}).ok,false);
  assert.ok(auditLayout({layoutMinimumGapMm:-1,layoutItems:[]}).issues.some(i=>i.field==="layoutMinimumGapMm"));
 });
+
+test("V2.1 detects furniture collisions with fixed columns",()=>{
+ const item=(id,x,y,w,d)=>({id,xMm:x,yMm:y,widthMm:w,depthMm:d});
+ const c={roomWidthMm:4000,roomDepthMm:3000,layoutItems:[item("sofa",200,200,1200,800)],layoutObstacles:[item("column",1000,500,400,400)]};
+ assert.equal(auditLayout(c).ok,false);
+ assert.ok(auditLayout(c).issues.some(i=>i.field==="pair:column:sofa"));
+ assert.equal(auditLayout({...c,layoutItems:[item("sofa",1800,200,1200,800)]}).ok,true);
+});
