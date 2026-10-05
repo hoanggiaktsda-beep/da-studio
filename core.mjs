@@ -19,13 +19,24 @@ export const FIELD_DEFS={
 let seq=0;
 export function createModel(){return {id:"mdl_"+Date.now().toString(36)+"_"+(++seq),name:"Model "+String(seq).padStart(2,"0"),category:"Sofa",brand:"",sku:"",target:"",material:"Theo ảnh",dimensions:"",structure:"",application:"Giữ đúng mẫu",notes:"",selected:true,properties:{},references:[]};}
 export function uniqueModelID(models){return new Set(models.map(m=>m.id)).size===models.length;}
+// Design AI V2: architectural domain authority outranks photography and rendering.
+// Manual selection may add supporting brains but never remove mandatory domain/QC authority.
+export const DESIGN_AUTHORITY={
+ "Nội thất":{lead:"interior",support:["architecture","visual","image"],locks:["Architecture","Geometry","Furniture Layout"]},
+ "Kiến trúc":{lead:"architecture",support:["interior","visual","image"],locks:["Architecture","Geometry"]},
+ "Cảnh quan":{lead:"architecture",support:["urban","visual","image"],locks:["Geometry"]},
+ "Quy hoạch đô thị":{lead:"urban",support:["architecture","visual","image"],locks:["Geometry"]}
+};
+export function designAuthority(space="Nội thất"){return DESIGN_AUTHORITY[space]||DESIGN_AUTHORITY["Nội thất"];}
 export function selectBrains({space="Nội thất",mode="create",models=[]},expertMode="auto",chosen=[]){
- if(expertMode==="manual")return BRAINS.filter(b=>chosen.includes(b.id));
- const ids=new Set(["image","quality","visual"]);
- if(space==="Quy hoạch đô thị")ids.add("urban");
- else if(space==="Kiến trúc"||space==="Cảnh quan")ids.add("architecture");
- else ids.add("interior");
- if(mode==="edit"&&models.some(m=>m.selected))ids.add("interior");
+ const authority=designAuthority(space);
+ const ids=new Set([authority.lead,"quality","image"]);
+ if(expertMode==="manual"){
+   for(const id of chosen)if(BRAINS.some(b=>b.id===id))ids.add(id);
+ }else{
+   ids.add("visual");
+   if(mode==="edit"&&models.some(m=>m.selected))ids.add("interior");
+ }
  return BRAINS.filter(b=>ids.has(b.id));
 }
 export function getWarnings(c){
@@ -48,6 +59,7 @@ export function getWarnings(c){
 export function compilePrompt(c){
  const active=c.models.filter(m=>m.selected);
  const brains=selectBrains(c,c.expertMode,c.chosenBrains);
+ const authority=designAuthority(c.space);
  const refNames=active.map(m=>({id:m.id,name:m.name,category:m.category,brand:m.brand||"Unverified",sku:m.sku||"Unverified",target:m.target||"Not specified",material:m.material,dimensions:m.dimensions,structure:m.structure,application:m.application,properties:m.properties,notes:m.notes,references:m.references.map((r,i)=>({order:i+1,filename:r.name}))}));
  const lines=[
  "HOANGGIA AI — DESIGN INTELLIGENCE ENGINE V1.4",
@@ -65,6 +77,9 @@ export function compilePrompt(c){
  "PHOTOGRAPHY QUALITY GUIDANCE: "+resolvePhotoDirection(c).guide,
  "BRAND RULE: Brand is a design reference only. Do not claim official products, exact catalog models, verified authenticity or protected brand identity without supplied visual/product evidence. Per-Model references and verified product identity override global inspiration.",
  "EXPERT ORCHESTRATOR: "+c.expertMode,
+ "DOMAIN AUTHORITY: "+authority.lead+" leads design decisions. Supporting brains may advise but cannot override space planning, dimensions, architecture, technical feasibility, or approved materials.",
+ "AUTHORITY ORDER: verified project constraints and hard locks > domain lead > supporting material/lighting experts > photographic/cinematic presentation.",
+ "DOMAIN QC: if inputs conflict with locked geometry, use or feasibility, flag the conflict rather than silently modifying the design.",
  "ACTIVE BRAINS: "+brains.map(b=>b.name+" ("+b.experts.length+" expert roles)").join("; "),
  "EXPERT DECISION: assess spatial logic, product scale, material behavior, lighting physics, camera composition; check conflicts before execution.",
  "MASTER IMAGE: "+(c.masterImage?.name||"none"),
