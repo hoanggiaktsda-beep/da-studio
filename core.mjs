@@ -104,6 +104,9 @@ export function auditLayout(c={}){
   }
  }
  if((items.length||obstacles.length||doors.length)&&!hasRoom)issues.push({severity:"unknown",field:"layoutRoom",message:"Chưa đủ kích thước phòng để xác minh vị trí sản phẩm."});
+ if(items.length&&hasRoom&&!doors.length)issues.push({severity:"unknown",field:"layoutDoors",message:"Chưa khai báo vùng mở cửa; chưa thể kiểm tra xung đột với cửa và lối tiếp cận."});
+ if(items.length&&hasRoom&&!obstacles.length)issues.push({severity:"unknown",field:"layoutObstacles",message:"Chưa khai báo cột, tường nhô hoặc vật cản; chỉ kiểm tra hình chữ nhật phòng."});
+ if(items.length&&(!c.layoutMinimumGapMm&&c.layoutMinimumGapMm!==0))issues.push({severity:"unknown",field:"layoutMinimumGapMm",message:"Chưa khai báo khoảng cách tối thiểu giữa sản phẩm; chưa thể xác nhận khoảng hở sử dụng."});
  if(items.length&&boxes.length&&hasRoom)evidence.push("Kiểm tra ranh giới trên mặt bằng chữ nhật "+roomW+" × "+roomD+" mm; chưa tính cửa, tường, hướng mở, lối thoát hiểm.");
  if(doors.length)evidence.push("Vùng mở cửa do người dùng khai báo là bao hình chữ nhật, không tự tính cung quay cánh cửa.");
  if(!items.length)issues.push({severity:"unknown",field:"layoutItems",message:"Chưa có tọa độ mặt bằng sản phẩm; không thể xác nhận bố trí, va chạm hay khoảng cách."});
@@ -133,7 +136,8 @@ export function auditDesign(c={}){
    else{
     const factor={mm:1,cm:10,m:1000}[match[4].toLowerCase()];
     const d=Number(match[1].replace(",","."))*factor,w=Number(match[2].replace(",","."))*factor;
-    if(!Number.isFinite(d*w)||d<=0||w<=0)add("error","model:"+m.id,"Kích thước sản phẩm không hợp lệ.");
+    const h=match[3]===undefined?null:Number(match[3].replace(",","."))*factor;
+    if(!Number.isFinite(d)||!Number.isFinite(w)||d<=0||w<=0||(h!==null&&(!Number.isFinite(h)||h<=0)))add("error","model:"+m.id,"Kích thước dài, rộng hoặc cao của sản phẩm không hợp lệ.");
     else {evidence.push(m.name+": "+d+" × "+w+" mm (khai báo, chưa xác minh catalogue)");if(roomW>0&&roomD>0&&((d>roomD||w>roomW)&&(d>roomW||w>roomD)))add("error","model:"+m.id,"Sản phẩm lớn hơn cả hai hướng phòng; cần kiểm tra lại kích thước.");}
    }
   }
@@ -142,6 +146,7 @@ export function auditDesign(c={}){
  }
  const layout=auditLayout(c);issues.push(...layout.issues);evidence.push(...layout.evidence);
  if(!c.projectStandard)add("unknown","projectStandard","Chưa cung cấp quy chuẩn/tiêu chí nghiệm thu áp dụng; không xác nhận tuân thủ pháp lý.");
+ add("unknown","constructionFeasibility","Chưa có hồ sơ khảo sát, kết cấu, MEP, kích thước thực tế và chi tiết liên kết; kết quả mặt bằng không chứng nhận khả năng thi công.");
  return {ok:!issues.some(x=>x.severity==="error"),issues,evidence};
 }
 
