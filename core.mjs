@@ -103,6 +103,27 @@ export function auditLayout(c={}){
     issues.push({severity:"error",field:"pair:"+a.id+":"+b.id,message:"Khoảng cách "+a.id+" / "+b.id+" nhỏ hơn ngưỡng dự án."});
   }
  }
+ // Optional explicit access/service envelope in each layout item; never infer it from an image.
+ for(const item of items){
+  const id=String(item?.id||item?.name||"unknown");
+  const z=item?.accessZoneMm;
+  if(!z){issues.push({severity:"unknown",field:"access:"+id,message:"Chưa khai báo vùng tiếp cận/thao tác trước sản phẩm "+id+"; chưa xác nhận khả năng sử dụng."});continue;}
+  const raw=[z.xMm,z.yMm,z.widthMm,z.depthMm];
+  if(raw.some(v=>v===""||v===null||v===undefined||!Number.isFinite(Number(v)))||Number(raw[0])<0||Number(raw[1])<0||Number(raw[2])<=0||Number(raw[3])<=0){
+   issues.push({severity:"error",field:"access:"+id,message:"Vùng tiếp cận/thao tác không hợp lệ: "+id});continue;
+  }
+  const [x,y,w,d]=raw.map(Number);
+  if(hasRoom&&(x+w>roomW||y+d>roomD))issues.push({severity:"error",field:"access:"+id,message:"Vùng thao tác vượt ranh giới phòng: "+id});
+  for(const b of boxes){
+   if(b.id===id)continue;
+   if(x<b.x+b.w&&b.x<x+w&&y<b.y+b.d&&b.y<y+d)
+    issues.push({severity:"error",field:"access:"+id+":"+b.id,message:"Vùng thao tác/tiếp cận "+id+" bị chiếm bởi "+b.id});
+  }
+  evidence.push("Vùng thao tác "+id+" được kiểm tra theo bao chữ nhật do người dùng khai báo.");
+ }
+ if(doors.length)for(const door of doors)if(!door?.swingDirection)
+  issues.push({severity:"unknown",field:"doorSwing:"+String(door?.id||"cửa"),message:"Chưa khai báo hướng mở cửa; vùng bao mở cửa chỉ được kiểm tra theo tọa độ nhập."});
+ if(items.length)issues.push({severity:"unknown",field:"circulation","message":"Chưa có mạng lối đi và điểm đầu/cuối được xác minh; khoảng cách giữa các đồ vật không chứng minh đường di chuyển liên tục."});
  if((items.length||obstacles.length||doors.length)&&!hasRoom)issues.push({severity:"unknown",field:"layoutRoom",message:"Chưa đủ kích thước phòng để xác minh vị trí sản phẩm."});
  if(items.length&&hasRoom&&!doors.length)issues.push({severity:"unknown",field:"layoutDoors",message:"Chưa khai báo vùng mở cửa; chưa thể kiểm tra xung đột với cửa và lối tiếp cận."});
  if(items.length&&hasRoom&&!obstacles.length)issues.push({severity:"unknown",field:"layoutObstacles",message:"Chưa khai báo cột, tường nhô hoặc vật cản; chỉ kiểm tra hình chữ nhật phòng."});
