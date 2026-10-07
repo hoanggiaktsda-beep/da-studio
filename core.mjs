@@ -143,7 +143,10 @@ export function auditDesign(c={}){
   else if(width===null)add("unknown","clearanceMm","Chưa có số đo lối đi để đối chiếu ngưỡng dự án.");
   else if(!Number.isFinite(width)||width<=0)add("error","clearanceMm","Số đo lối đi không hợp lệ.");
   else {evidence.push("Lối đi: "+width+" mm / yêu cầu dự án: "+required+" mm");if(width<required)add("error","clearanceMm","Lối đi nhỏ hơn ngưỡng dự án đã nhập.");}
- }else if(width!==null)add("unknown","requiredClearanceMm","Chưa có ngưỡng đối chiếu; không tự kết luận lối đi đạt chuẩn.");
+ }else if(width!==null){
+  if(!Number.isFinite(width)||width<=0)add("error","clearanceMm","Số đo lối đi phải là số dương hợp lệ.");
+  else add("unknown","requiredClearanceMm","Chưa có ngưỡng đối chiếu; không tự kết luận lối đi đạt chuẩn.");
+ }
  const roomW=numeric(c.roomWidthMm),roomD=numeric(c.roomDepthMm);
  for(const [key,v] of [["roomWidthMm",roomW],["roomDepthMm",roomD]])if(v!==null&&(!Number.isFinite(v)||v<=0))add("error",key,"Kích thước phòng phải là số dương.");
  if(roomW!==null&&roomD!==null&&roomW>0&&roomD>0&&Number.isFinite(roomW*roomD))evidence.push("Kích thước phòng: "+roomW+" × "+roomD+" mm (do người dùng cung cấp, chưa đo từ ảnh)");
