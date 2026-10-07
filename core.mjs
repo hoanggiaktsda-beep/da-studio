@@ -52,6 +52,7 @@ export function auditLayout(c={}){
  const seen=new Set();
  const obstacles=Array.isArray(c.layoutObstacles)?c.layoutObstacles:[];
  const doors=Array.isArray(c.layoutDoors)?c.layoutDoors:[];
+ for(const [label,group] of [["sản phẩm",items],["vật cản",obstacles],["cửa",doors]])for(const entry of group)if(entry?.__parseError)issues.push({severity:"error",field:"layoutJSON",message:"Dữ liệu "+label+": "+entry.__parseError});
  for(const door of doors){
   const id=String(door?.id||"cửa");
   const raw=[door?.xMm,door?.yMm,door?.widthMm,door?.depthMm];
