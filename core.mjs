@@ -200,41 +200,33 @@ export function compilePrompt(c){
  const brains=selectBrains(c,c.expertMode,c.chosenBrains);
  const authority=designAuthority(c.space);
  const audit=auditDesign(c);
- const refNames=active.map(m=>({id:m.id,name:m.name,category:m.category,brand:m.brand||"Unverified",sku:m.sku||"Unverified",target:m.target||"Not specified",material:m.material,dimensions:m.dimensions,structure:m.structure,application:m.application,properties:m.properties,notes:m.notes,references:m.references.map((r,i)=>({order:i+1,filename:r.name}))}));
- const lines=[
- "HOANGGIA AI — DESIGN INTELLIGENCE ENGINE V1.4",
- "ROLE: Professional architecture, urban planning, interior design and photorealistic visual production.",
- "TASK: "+(c.mode==="edit"?"EDIT EXISTING MASTER IMAGE":"CREATE NEW IMAGE"),
- "SPACE: "+c.space,"SPECIFIC ZONE: "+(c.zone==="HG tự đề xuất"?recommendVisual(c).zone:(c.zone||"Not specified")),"STYLE: "+(c.style==="HG tự đề xuất"?recommendVisual(c).style:c.style),"REQUESTED ASPECT: "+(c.aspect||"3:2 Ngang"),"API RENDER SIZE: "+c.size,"QUALITY: "+c.quality,
- "CAMERA: "+(c.camera==="HG tự đề xuất"?recommendVisual(c).camera:(c.camera||"Eye Level")),
- "LIGHTING: "+(c.lighting==="HG tự đề xuất"?recommendVisual(c).lighting:(c.lighting||"Natural Daylight")),
- "ASPECT RULE: Preserve the requested composition. When the image API does not support the exact requested aspect, use the nearest supported size and warn the user; do not falsely label the output aspect.",
- "DESIGN BRIEF: "+(c.brief?.trim()||"Produce a coherent professional architecture/interior design."),
- "INTERIOR BRAND DIRECTION: "+(c.furnitureBrand||"Không áp dụng"),
- "GEOGRAPHIC & ENVIRONMENTAL CONTEXT: "+geographicDirection(c),
- "OUTPUT MEDIUM: "+(c.outputType||"HG tự đề xuất"),
- "PHOTOGRAPHY DIRECTOR: "+resolvePhotoDirection(c).selected,
- "PHOTOGRAPHY QUALITY GUIDANCE: "+resolvePhotoDirection(c).guide,
- "BRAND RULE: Brand is a design reference only. Do not claim official products, exact catalog models, verified authenticity or protected brand identity without supplied visual/product evidence. Per-Model references and verified product identity override global inspiration.",
- "EXPERT ORCHESTRATOR: "+c.expertMode,
- "DOMAIN AUTHORITY: "+authority.lead+" leads design decisions. Supporting brains may advise but cannot override space planning, dimensions, architecture, technical feasibility, or approved materials.",
- "AUTHORITY ORDER: verified project constraints and hard locks > domain lead > supporting material/lighting experts > photographic/cinematic presentation.",
- "DOMAIN QC: if inputs conflict with locked geometry, use or feasibility, flag the conflict rather than silently modifying the design.",
- "DESIGN AUDIT EVIDENCE: "+(audit.evidence.join("; ")||"No verified dimensions provided."),
- "DESIGN AUDIT ISSUES: "+audit.issues.map(i=>i.severity+": "+i.message).join("; "),
- "VALIDATION RULE: user-supplied dimensions and standards are unverified until measured or supported by project documents. Never claim legal compliance or invent clearance requirements.",
- "ACTIVE BRAINS: "+brains.map(b=>b.name+" ("+b.experts.length+" expert roles)").join("; "),
- "EXPERT DECISION: assess spatial logic, product scale, material behavior, lighting physics, camera composition; check conflicts before execution.",
- "MASTER IMAGE: "+(c.masterImage?.name||"none"),
- "HARD LOCKS: "+(c.locks.join("; ")||"none"),
- "MULTI-MODEL REFERENCES:",
- JSON.stringify(refNames,null,2),
- "REFERENCE MAPPING: The FIRST input image is the MASTER when provided. Each following image is assigned to its precise MODEL ID and reference order, by the uploaded manifest. Never merge identities or materials across different Models without explicit authorization.",
- "EDIT RULES: Preserve all locked geometry, architecture, openings, floor plan, camera and perspective. Apply only requested changes. Fit product size to existing space without altering locked architecture.",
- "REALISM: Physically credible material, scale, contact shadows, illumination and perspective. Do not invent unseen construction specifications or make up brand/model identities.",
- "QC: Review hard locks, multi-model isolation, composition, geometry, design feasibility, duplicate objects and artifacts."
- ];
- return lines.join("\n");
+ const visual=recommendVisual(c);
+ const zone=c.zone==="HG tự đề xuất"?visual.zone:(c.zone||"Chưa xác định");
+ const style=c.style==="HG tự đề xuất"?visual.style:c.style;
+ const camera=c.camera==="HG tự đề xuất"?visual.camera:c.camera;
+ const lighting=c.lighting==="HG tự đề xuất"?visual.lighting:c.lighting;
+ const uniq=values=>[...new Set(values.filter(Boolean).map(v=>String(v).trim()).filter(Boolean))];
+ const references=active.map(m=>{
+   const props=uniq([m.category,m.brand&&m.brand!=="Không áp dụng"?m.brand:"",m.sku,m.material,m.dimensions,m.structure,m.properties,m.notes]);
+   const files=(m.references||[]).map(r=>r.name).filter(Boolean);
+   return [m.name||m.id,m.target?"vị trí: "+m.target:"",m.application?"áp dụng: "+m.application:"",props.length?"đặc điểm: "+props.join(", "):"",files.length?"ảnh: "+files.join(", "):""].filter(Boolean).join(" | ");
+ });
+ const context=uniq(["Loại không gian: "+c.space,"Khu vực: "+zone,"Phong cách: "+style,c.masterImage?"Ảnh gốc: "+c.masterImage.name:"",geographicDirection(c)]).join(". ");
+ const task=uniq([c.mode==="edit"?"Chỉnh sửa ảnh gốc theo yêu cầu.":"Tạo ảnh thiết kế mới.",c.brief?.trim(),references.length?"Sản phẩm và ảnh tham chiếu (giữ đúng từng model): "+references.join("; "):""]).join(" ");
+ const limits=uniq([
+   c.mode==="edit"?"Giữ nguyên mọi yếu tố ngoài phạm vi chỉnh sửa.":"",
+   c.locks.length?"Khóa: "+c.locks.join(", ")+".":"",
+   "Ảnh tham chiếu từng sản phẩm chỉ áp dụng cho đúng sản phẩm đó; không trộn model.",
+   "Không tự bịa kích thước, cấu tạo khuất hoặc xác nhận tiêu chuẩn chưa có chứng cứ.",
+   audit.issues.length?"Xung đột cần kiểm tra: "+audit.issues.map(i=>i.message).join("; "):""
+ ]).join(" ");
+ return [
+  "BỐI CẢNH: "+context,
+  "VAI TRÒ: "+authority.lead+" phụ trách thiết kế; "+brains.map(b=>b.name).join(", ")+" hỗ trợ theo chuyên môn, không vượt quyền thiết kế.",
+  "NHIỆM VỤ: "+task,
+  "RÀNG BUỘC: "+limits,
+  "KẾT QUẢ: Ảnh "+(c.mode==="edit"?"chỉnh sửa":"thiết kế")+" đúng yêu cầu, tỷ lệ "+(c.aspect||"3:2 Ngang")+", góc máy "+camera+", ánh sáng "+lighting+", vật liệu và phối cảnh chân thực; "+(c.outputType||"đầu ra hình ảnh")+"."
+ ].join("\n\n");
 }
 export function projectSnapshot(c){return {...c,masterImage:c.masterImage?.name||null,models:c.models.map(m=>({...m,references:m.references.map(r=>({name:r.name}))}))};}
 export function makeRenderPayload(c,prompt,images){return {mode:c.mode,model:"gpt-image-2",prompt,size:c.size,quality:c.quality,images};}
