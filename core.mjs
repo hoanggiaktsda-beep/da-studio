@@ -228,5 +228,37 @@ export function compilePrompt(c){
   "KẾT QUẢ: Ảnh "+(c.mode==="edit"?"chỉnh sửa":"thiết kế")+" đúng yêu cầu, tỷ lệ "+(c.aspect||"3:2 Ngang")+", góc máy "+camera+", ánh sáng "+lighting+", vật liệu và phối cảnh chân thực; "+(c.outputType||"đầu ra hình ảnh")+"."
  ].join("\n\n");
 }
+
+// Language editors operate on the completed five-section prompt; they do not
+// alter design authority, references, hard locks, or expert decisions.
+export function editPromptLanguage(prompt, language="vi"){
+ if(language!=="en") return prompt;
+ const terms=[
+  ["BỐI CẢNH:","CONTEXT:"],["VAI TRÒ:","ROLE:"],["NHIỆM VỤ:","TASK:"],["RÀNG BUỘC:","CONSTRAINTS:"],["KẾT QUẢ:","RESULT:"],
+  ["Loại không gian:","Space type:"],["Khu vực:","Area:"],["Phong cách:","Style:"],["Ảnh gốc:","Source image:"],
+  ["phụ trách thiết kế;","leads design;"],["hỗ trợ theo chuyên môn, không vượt quyền thiết kế.","provide domain-specific support without overriding design authority."],
+  ["Tạo ảnh thiết kế mới.","Create a new design image."],["Chỉnh sửa ảnh gốc theo yêu cầu.","Edit the source image as requested."],
+  ["Sản phẩm và ảnh tham chiếu (giữ đúng từng model):","Products and references (preserve each model identity):"],
+  ["vị trí:","position:"],["áp dụng:","application:"],["đặc điểm:","properties:"],["ảnh:","images:"],
+  ["Giữ nguyên mọi yếu tố ngoài phạm vi chỉnh sửa.","Preserve everything outside the authorized editing scope."],
+  ["Khóa:","Locks:"],["Ảnh tham chiếu từng sản phẩm chỉ áp dụng cho đúng sản phẩm đó; không trộn model.","Apply each product reference only to its assigned product; never mix model identities."],
+  ["Không tự bịa kích thước, cấu tạo khuất hoặc xác nhận tiêu chuẩn chưa có chứng cứ.","Do not invent dimensions or hidden construction details, or claim unverified standards."],
+  ["Xung đột cần kiểm tra:","Conflicts requiring review:"],
+  ["Ảnh chỉnh sửa đúng yêu cầu","Edited image matching the request"],["Ảnh thiết kế đúng yêu cầu","Designed image matching the request"],
+  ["tỷ lệ","aspect ratio"],["góc máy","camera"],["ánh sáng","lighting"],["vật liệu và phối cảnh chân thực","realistic materials and perspective"],
+  ["đầu ra hình ảnh","image output"],["Nội thất","Interior"],["Kiến trúc","Architecture"],["Cảnh quan","Landscape"],["Quy hoạch đô thị","Urban planning"],
+  ["Không áp dụng","Not applicable"],["Chưa xác định","Not specified"],["Tự nhiên","Natural"],["Ban ngày","Daytime"],
+  ["Phòng khách","Living room"],["Phòng ngủ","Bedroom"],["Phòng bếp","Kitchen"],["Phòng ăn","Dining room"],
+  ["Hiện đại","Modern"],["Tối giản","Minimalist"],["Sang trọng","Luxury"],["Ảnh tham chiếu","Reference image"]
+ ];
+ let result=String(prompt);
+ for(const [vi,en] of terms)result=result.split(vi).join(en);
+ // A pure-English output must not silently discard user-entered Vietnamese.
+ // Explicitly request English source descriptions when a reliable translation is unavailable.
+ if(/[ăâđêôơưĂÂĐÊÔƠƯàáảãạằắẳẵặầấẩẫậèéẻẽẹềếểễệìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵ]/i.test(result)){
+  throw new Error("English Language Expert: Some descriptions or selected values remain in Vietnamese. Please enter the design brief, product notes, and custom descriptions in English, or choose Vietnamese output. No design details were removed.");
+ }
+ return result;
+}
 export function projectSnapshot(c){return {...c,masterImage:c.masterImage?.name||null,models:c.models.map(m=>({...m,references:m.references.map(r=>({name:r.name}))}))};}
 export function makeRenderPayload(c,prompt,images){return {mode:c.mode,model:"gpt-image-2",prompt,size:c.size,quality:c.quality,images};}
