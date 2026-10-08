@@ -65,7 +65,7 @@
    <div class="panel-heading"><span class="eyebrow">04 / ĐIỀU PHỐI CHUYÊN GIA</span><span class="mini">CHUYÊN GIA · PHÂN QUYỀN V2</span></div>
    <div class="brain-grid" id="brainGrid"></div><label>Điều phối chuyên gia<select id="expertMode"><option value="auto">TỰ ĐỘNG — Kích hoạt theo ngữ cảnh</option><option value="manual">THỦ CÔNG — Chọn nhóm chuyên gia</option></select></label>
    <div id="manualExperts" hidden></div><div class="photo-director"><div class="panel-heading"><span class="eyebrow">ĐẦU RA HÌNH ẢNH · GIÁM ĐỐC NHIẾP ẢNH</span><span class="mini">CHUYÊN GIA HÌNH ẢNH</span></div><label>Loại đầu ra hình ảnh<select id="outputType"></select></label><label>Định hướng nhiếp ảnh<select id="photoDirection"></select></label><p class="hint" id="photoAdvice" aria-live="polite">Chuyên gia nhiếp ảnh sẽ đề xuất góc máy, ống kính, ánh sáng, vật liệu và hậu kỳ chân thực.</p></div>
-   <div class="photo-director" style="margin-top:14px"><div class="panel-heading"><span class="eyebrow">NGÔN NGỮ PROMPT · LANGUAGE EXPERTS</span><span class="mini">TRƯỚC KHI BIÊN DỊCH</span></div><label for="promptLanguage">Ngôn ngữ đầu ra<select id="promptLanguage"><option value="vi">Tiếng Việt thuần · Chuyên gia tiếng Việt</option><option value="en">English only · English Language Expert</option></select></label><p class="hint" id="promptLanguageStatus" role="status">Chuyên gia tiếng Việt kiểm tra tính mạch lạc và thuật ngữ thiết kế.</p></div>
+   <div class="photo-director" id="promptLanguagePanel" style="margin:16px 0;padding:18px;border:2px solid #c7aa6b;border-radius:14px;background:rgba(199,170,107,.09)"><div class="panel-heading"><span class="eyebrow">05 / CHỌN NGÔN NGỮ PROMPT · LANGUAGE EXPERTS</span><span class="mini">TRƯỚC KHI BIÊN DỊCH</span></div><label for="promptLanguage" style="font-weight:700">CHỌN NGÔN NGỮ TRƯỚC KHI TẠO PROMPT<select id="promptLanguage" style="display:block;width:100%;margin-top:10px;padding:12px;border:1px solid #c7aa6b;border-radius:8px"><option value="vi">Tiếng Việt thuần · Chuyên gia tiếng Việt</option><option value="en">English only · English Language Expert</option></select></label><p class="hint" id="promptLanguageStatus" role="status">Chuyên gia tiếng Việt kiểm tra tính mạch lạc và thuật ngữ thiết kế.</p></div>
    <div class="actions"><button id="compile" class="primary">BIÊN DỊCH PROMPT <span>↗</span></button><button class="outline" id="copyPrompt">SAO CHÉP</button><button class="outline" id="downloadPrompt">TẢI .TXT</button></div>
    <div id="warnings" class="warnings" role="status" aria-live="polite"></div>
    <pre id="promptOutput">Prompt đã biên dịch sẽ hiển thị tại đây...</pre>
@@ -90,5 +90,5 @@
   <footer>HOANGGIA AI · XƯỞNG THIẾT KẾ V2.0 <span>Ảnh không lưu trên GitHub · Bản phát triển</span></footer>
  </main>
 </div>
-<script type="module" src="./app.mjs"></script>
+<script type="module" src="./app.mjs?v=20261008-language2"></script>
 </body></html>
