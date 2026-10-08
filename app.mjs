@@ -1,4 +1,4 @@
-import {BRAINS,CATEGORIES,LOCKS,FIELD_DEFS,createModel,getWarnings,compilePrompt,projectSnapshot,makeRenderPayload} from "./core.mjs";
+import {BRAINS,CATEGORIES,LOCKS,FIELD_DEFS,createModel,getWarnings,compilePrompt,editPromptLanguage,projectSnapshot,makeRenderPayload} from "./core.mjs";
 import {SPACE_CATALOG,STYLE_OPTIONS,CAMERA_OPTIONS,LIGHTING_OPTIONS,ASPECT_OPTIONS,FURNITURE_BRANDS,OUTPUT_TYPES,PHOTO_DIRECTIONS,resolvePhotoDirection,recommendVisual,SETTING_AREAS,WEATHER_CONTEXT,SEASON_CONTEXT,VIEW_CONTEXT,AUTO_CONTEXT} from "./design-catalog.mjs";
 import {IMAGE_PLATFORMS,adviseImageWorkflow,resolveImageAI} from "./image-advisor.mjs";
 const $=id=>document.getElementById(id);
@@ -71,7 +71,21 @@ function drawAdvisor(){
  }));
 }
 function showStatus(msg,error=false){$("renderStatus").textContent=msg;$("renderStatus").style.color=error?"#efa6a0":""}
-function compile(){const c=liveSettings(),p=compilePrompt(c);$("promptOutput").textContent=p;$("warnings").replaceChildren(...getWarnings(c).map(w=>text("p","⚠ "+w)));return p}
+function compile(){
+ const c=liveSettings(),language=$("promptLanguage")?.value||"vi";
+ try {
+  const p=editPromptLanguage(compilePrompt(c),language);
+  $("promptOutput").textContent=p;
+  $("promptLanguageStatus").textContent=language==="en"?"English Language Expert: English-only output validated.":"Chuyên gia tiếng Việt: giữ nguyên đầy đủ thông tin thiết kế.";
+  $("warnings").replaceChildren(...getWarnings(c).map(w=>text("p","⚠ "+w)));
+  return p;
+ } catch(error) {
+  $("promptOutput").textContent="Không thể biên dịch Prompt: "+error.message;
+  $("promptLanguageStatus").textContent=error.message;
+  $("warnings").replaceChildren(text("p","⚠ "+error.message));
+  throw error;
+ }
+}
 function downloadText(name,content,type="text/plain"){const b=new Blob([content],{type}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2500)}
 async function readDataURL(f){return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Không đọc được "+f.name));reader.readAsDataURL(f)})}
 async function render(){
