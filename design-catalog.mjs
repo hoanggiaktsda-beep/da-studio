@@ -40,7 +40,7 @@ export const VIEW_CONTEXT={
 };
 export function validLocalDate(c={}){const {year,month,day}=c;if(!/^\d{4}$/.test(String(year||""))||!/^\d{1,2}$/.test(String(month||""))||!/^\d{1,2}$/.test(String(day||"")))return false;const d=new Date(Date.UTC(Number(year),Number(month)-1,Number(day)));return d.getUTCFullYear()===Number(year)&&d.getUTCMonth()+1===Number(month)&&d.getUTCDate()===Number(day)}
 export function geographicDirection(c={}){
- const clean=v=>typeof v==="string"&&v.trim()&&v.trim()!==AUTO_CONTEXT?v.trim():null;
+ const clean=v=>typeof v==="string"&&v.trim()&&v.trim()!==AUTO_CONTEXT&&v.trim()!=="Không đề xuất"?v.trim():null;
  const country=clean(c.country),city=clean(c.city),area=clean(c.settingArea),scene=clean(c.surroundings),weather=clean(c.weather),season=clean(c.season),orientation=clean(c.orientation);
  const date=[c.year,c.month,c.day].every(x=>Number.isInteger(Number(x))&&Number(x)>0)?new Date(Date.UTC(Number(c.year),Number(c.month)-1,Number(c.day))):null;
  const dateOK=date&&validLocalDate(c);
