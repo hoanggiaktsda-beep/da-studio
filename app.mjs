@@ -122,12 +122,13 @@ async function render(){
   showStatus("Đã nhận ảnh từ AI.");
  }catch(e){if(!controller.signal.aborted)showStatus("Không tạo được ảnh: "+(e.message||String(e)),true)}finally{if(state.renderController===controller)state.renderController=null;drawAdvisor()}
 }
-function populate(select,values,keep){const old=keep?select.value:null;select.replaceChildren();for(const v of values){const option=document.createElement("option");option.value=v;option.textContent=vi(v);select.append(option)}if(old&&values.includes(old))select.value=old}
+function populate(select,values,keep){values=[...values];if(!values.includes("Không đề xuất"))values.splice(1,0,"Không đề xuất");const old=keep?select.value:null;select.replaceChildren();for(const v of values){const option=document.createElement("option");option.value=v;option.textContent=vi(v);select.append(option)}if(old&&values.includes(old))select.value=old}
 function updateZone(){populate($("zone"),SPACE_CATALOG[$("space").value]||SPACE_CATALOG["Nội thất"],false);const old=$("surroundings").value;populate($("surroundings"),VIEW_CONTEXT[$("space").value]||VIEW_CONTEXT["Nội thất"],false);if([...$("surroundings").options].some(o=>o.value===old))$("surroundings").value=old;$("surroundingsLabel").firstChild.textContent=$("space").value==="Nội thất"?"Bối cảnh ngoài cửa sổ / xung quanh":$("space").value==="Kiến trúc"?"Cảnh quan xung quanh":$("space").value==="Cảnh quan"?"Sinh thái và cảnh quan":"Bối cảnh khu vực quy hoạch"}
 for(const group of [...new Set(IMAGE_PLATFORMS.map(p=>p.group))]){const g=document.createElement("optgroup");g.label=group;for(const p of IMAGE_PLATFORMS.filter(p=>p.group===group)){const o=document.createElement("option");o.value=p.id;o.textContent=p.name;g.append(o)}$("imageAI").append(g)}
 $("imageAI").addEventListener("change",drawAdvisor);
 $("copyForAI").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(compile());showStatus("Đã sao chép prompt cho AI được chọn.")}catch(e){showStatus("Không thể sao chép: "+e.message,true)}});
 for(const [group,names] of FURNITURE_BRANDS){const g=document.createElement("optgroup");g.label=group;for(const name of names){const o=document.createElement("option");o.value=name;o.textContent=name;g.append(o)}$("furnitureBrand").append(g)}
+{const opt=document.createElement("option");opt.value="Không đề xuất";opt.textContent="Không đề xuất";$("furnitureBrand").prepend(opt)}
 $("furnitureBrand").value="Không áp dụng";
 $("furnitureBrand").addEventListener("change",()=>{$("customBrandWrap").hidden=$("furnitureBrand").value!=="Thương hiệu khác (nhập tên)"});
 populate($("outputType"),OUTPUT_TYPES,false);populate($("photoDirection"),PHOTO_DIRECTIONS,false);
