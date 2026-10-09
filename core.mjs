@@ -185,8 +185,8 @@ export function getWarnings(c){
  if(!c.brief?.trim())w.push("Chưa có mô tả thiết kế — AI sẽ dựa trên phong cách đã chọn.");
  if(!uniqueModelID(c.models))w.push("Model ID bị trùng.");
  const active=c.models.filter(m=>m.selected); 
- if(c.mode==="edit"&&c.locks.includes("Camera")&&c.camera&&c.camera!=="HG tự đề xuất"&&c.camera!=="Giữ nguyên camera ảnh gốc")w.push("Xung đột: Camera Lock đang bật nhưng góc camera yêu cầu thay đổi."); 
- if(c.mode==="edit"&&c.locks.includes("Lighting")&&c.lighting&&c.lighting!=="HG tự đề xuất"&&c.lighting!=="Giữ nguyên ánh sáng ảnh gốc")w.push("Xung đột: Lighting Lock đang bật nhưng ánh sáng yêu cầu thay đổi.");
+ if(c.mode==="edit"&&c.locks.includes("Camera")&&c.camera&&c.camera!=="Không đề xuất"&&c.camera!=="HG tự đề xuất"&&c.camera!=="Giữ nguyên camera ảnh gốc")w.push("Xung đột: Camera Lock đang bật nhưng góc camera yêu cầu thay đổi."); 
+ if(c.mode==="edit"&&c.locks.includes("Lighting")&&c.lighting&&c.lighting!=="Không đề xuất"&&c.lighting!=="HG tự đề xuất"&&c.lighting!=="Giữ nguyên ánh sáng ảnh gốc")w.push("Xung đột: Lighting Lock đang bật nhưng ánh sáng yêu cầu thay đổi.");
  if(active.length&&c.mode==="edit"&&active.some(m=>!m.target?.trim()))w.push("Có Model chưa ghi rõ đối tượng/vị trí cần thay thế.");
  if(active.some(m=>!m.references?.length))w.push("Có Model chưa có ảnh tham chiếu. AI chỉ sử dụng mô tả.");
  const refs=(c.masterImage?1:0)+active.reduce((sum,m)=>sum+(m.references?.length||0),0);
@@ -201,17 +201,18 @@ export function compilePrompt(c){
  const authority=designAuthority(c.space);
  const audit=auditDesign(c);
  const visual=recommendVisual(c);
- const zone=c.zone==="HG tự đề xuất"?visual.zone:(c.zone||"Chưa xác định");
- const style=c.style==="HG tự đề xuất"?visual.style:c.style;
- const camera=c.camera==="HG tự đề xuất"?visual.camera:c.camera;
- const lighting=c.lighting==="HG tự đề xuất"?visual.lighting:c.lighting;
+ const omit=v=>v==="Không đề xuất";
+ const zone=c.zone==="HG tự đề xuất"?visual.zone:(omit(c.zone)?"":(c.zone||"Chưa xác định"));
+ const style=c.style==="HG tự đề xuất"?visual.style:(omit(c.style)?"":c.style);
+ const camera=c.camera==="HG tự đề xuất"?visual.camera:(omit(c.camera)?"":c.camera);
+ const lighting=c.lighting==="HG tự đề xuất"?visual.lighting:(omit(c.lighting)?"":c.lighting);
  const uniq=values=>[...new Set(values.filter(Boolean).map(v=>String(v).trim()).filter(Boolean))];
  const references=active.map(m=>{
    const props=uniq([m.category,m.brand&&m.brand!=="Không áp dụng"?m.brand:"",m.sku,m.material,m.dimensions,m.structure,m.properties,m.notes]);
    const files=(m.references||[]).map(r=>r.name).filter(Boolean);
    return [m.name||m.id,m.target?"vị trí: "+m.target:"",m.application?"áp dụng: "+m.application:"",props.length?"đặc điểm: "+props.join(", "):"",files.length?"ảnh: "+files.join(", "):""].filter(Boolean).join(" | ");
  });
- const context=uniq(["Loại không gian: "+c.space,"Khu vực: "+zone,"Phong cách: "+style,c.masterImage?"Ảnh gốc: "+c.masterImage.name:"",geographicDirection(c)]).join(". ");
+ const context=uniq(["Loại không gian: "+c.space,zone?"Khu vực: "+zone:"",style?"Phong cách: "+style:"",c.masterImage?"Ảnh gốc: "+c.masterImage.name:"",geographicDirection(c)]).join(". ");
  const task=uniq([c.mode==="edit"?"Chỉnh sửa ảnh gốc theo yêu cầu.":"Tạo ảnh thiết kế mới.",c.brief?.trim(),references.length?"Sản phẩm và ảnh tham chiếu (giữ đúng từng model): "+references.join("; "):""]).join(" ");
  const limits=uniq([
    c.mode==="edit"?"Giữ nguyên mọi yếu tố ngoài phạm vi chỉnh sửa.":"",
