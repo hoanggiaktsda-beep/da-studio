@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#070807"><link rel="icon" href="./assets/brand-mark.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png?v=2"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="HOANGGIA AI"><link rel="manifest" href="./manifest.webmanifest"><meta name="description" content="HOANGGIA AI Design Studio — Architecture, Interior, Multi-sản phẩm References">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta name="theme-color" content="#070807"><link rel="icon" href="./assets/brand-mark.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png?v=2"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="HOANGGIA AI"><link rel="manifest" href="./manifest.webmanifest"><meta name="description" content="HOANGGIA AI Design Studio — Architecture, Interior, Multi-sản phẩm References">
 <title>HOANGGIA AI · Design Studio</title>
 <link rel="stylesheet" href="./styles.css">
 
@@ -40,11 +40,11 @@
 <p class="hint">Số đo và tiêu chí do người dùng cung cấp; hệ thống đối chiếu logic, không thay thế khảo sát hiện trạng, bản vẽ kỹ thuật hoặc thẩm định quy chuẩn.</p></details><label>Ý tưởng thiết kế<textarea id="brief" rows="3" placeholder="Ví dụ: phòng khách luxury, ánh sáng ban ngày, đá travertine, bố cục tĩnh..."></textarea></label>
   <div class="grid-two"><label>Khung hình<select id="aspect"></select><small id="aspectHint">Kích thước API: 1536×1024. Một số tỷ lệ là gợi ý bố cục, không phải kích thước xuất chính xác.</small></label><label>Chất lượng<select id="quality"><option value="low">Nháp · Nhanh</option><option value="medium" selected>Tiêu chuẩn · Cân bằng</option><option value="high">Cao · Chi tiết tối đa</option></select><small id="qualityHint">Tiêu chuẩn: cân bằng chi tiết, thời gian và chi phí.</small></label></div>
   <label class="upload" for="masterInput"><span id="masterLabel">+ TẢI ẢNH GỐC / THAM CHIẾU</span><small id="masterHint">Không bắt buộc khi tạo ảnh từ văn bản</small></label><input type="file" id="masterInput" accept="image/png,image/jpeg,image/webp" hidden>
-  <div id="hgReferenceModePanel" style="margin:12px 0;padding:14px;border:1px solid rgba(199,170,107,.5);border-radius:12px">
+  <div id="hgReferenceModePanel" style="display:block!important;visibility:visible!important;margin:12px 0;padding:14px;border:1px solid rgba(199,170,107,.5);border-radius:12px">
 <strong>THAM CHIẾU BẰNG HÌNH ẢNH · KHÓA GÓC CAMERA</strong>
 <p class="hint">Khi tải ảnh tham chiếu, HG giữ nguyên góc máy, hướng nhìn, phối cảnh và bố cục ảnh. Chọn một trong hai chế độ phong cách:</p>
-<label style="display:block;margin:9px 0"><input type="radio" name="hgReferenceStyle" value="keep" checked> Giữ nguyên phong cách</label>
-<label style="display:block;margin:9px 0"><input type="radio" name="hgReferenceStyle" value="change"> Thay đổi phong cách theo HG đã chỉ định</label>
+<label style="display:block;margin:9px 0"><input type="radio" name="hgReferenceStyle" value="keep" style="appearance:radio;-webkit-appearance:radio;width:18px;height:18px;display:inline-block" checked> Giữ nguyên phong cách</label>
+<label style="display:block;margin:9px 0"><input type="radio" name="hgReferenceStyle" value="change" style="appearance:radio;-webkit-appearance:radio;width:18px;height:18px;display:inline-block"> Thay đổi phong cách theo HG đã chỉ định</label>
 <p id="hgReferenceModeNote" class="hint">Giữ phong cách, vật liệu, màu sắc và ngôn ngữ thiết kế theo ảnh tham chiếu.</p>
 </div>
 <div class="master-preview" id="masterArea" hidden><img id="masterPreview" alt="Ảnh master"><button id="clearMaster" class="mini-btn">Gỡ ảnh</button></div>
@@ -97,5 +97,5 @@
   <footer>HOANGGIA AI · XƯỞNG THIẾT KẾ V2.0 <span>Ảnh không lưu trên GitHub · Bản phát triển</span></footer>
  </main>
 </div>
-<script type="module" src="./app.mjs?v=20261009-reference-camera1"></script>
+<script type="module" src="./app.mjs?v=20261009-reference-camera2"></script>
 </body></html>
