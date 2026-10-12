@@ -183,7 +183,7 @@ export function getWarnings(c){
  if(c.mode==="edit"&&c.locks.includes("Architecture")&&/(thay đổi kiến trúc|phá tường|di chuyển tường|đổi cửa sổ|đổi kết cấu)/i.test(c.brief||""))w.push("Xung đột: Architecture Lock và yêu cầu thay đổi kiến trúc.");
  if(c.mode==="edit"&&c.locks.includes("Geometry")&&/(thay đổi kích thước|nới rộng phòng|thu hẹp phòng|đổi chiều cao trần)/i.test(c.brief||""))w.push("Xung đột: Geometry Lock và yêu cầu thay đổi hình học.");
  if(!c.brief?.trim())w.push("Chưa có mô tả thiết kế — AI sẽ dựa trên phong cách đã chọn.");
- if(!uniqueModelID(c.models))w.push("Model ID bị trùng.");
+ if(!uniqueModelID(c.models))w.push("Xung đột: Model ID bị trùng.");
  const active=c.models.filter(m=>m.selected); 
  if(c.mode==="edit"&&c.locks.includes("Camera")&&c.camera&&c.camera!=="Không đề xuất"&&c.camera!=="HG tự đề xuất"&&c.camera!=="Giữ nguyên camera ảnh gốc")w.push("Xung đột: Camera Lock đang bật nhưng góc camera yêu cầu thay đổi."); 
  if(c.mode==="edit"&&c.locks.includes("Lighting")&&c.lighting&&c.lighting!=="Không đề xuất"&&c.lighting!=="HG tự đề xuất"&&c.lighting!=="Giữ nguyên ánh sáng ảnh gốc")w.push("Xung đột: Lighting Lock đang bật nhưng ánh sáng yêu cầu thay đổi.");
@@ -201,32 +201,37 @@ export function compilePrompt(c){
  const authority=designAuthority(c.space);
  const audit=auditDesign(c);
  const visual=recommendVisual(c);
+ const brand=c.furnitureBrand&&!["Không áp dụng","Không đề xuất"].includes(c.furnitureBrand)?c.furnitureBrand:"";
+ const photo=resolvePhotoDirection(c);
  const omit=v=>v==="Không đề xuất";
  const zone=c.zone==="HG tự đề xuất"?visual.zone:(omit(c.zone)?"":(c.zone||"Chưa xác định"));
  const style=c.style==="HG tự đề xuất"?visual.style:(omit(c.style)?"":c.style);
  const camera=c.camera==="HG tự đề xuất"?visual.camera:(omit(c.camera)?"":c.camera);
  const lighting=c.lighting==="HG tự đề xuất"?visual.lighting:(omit(c.lighting)?"":c.lighting);
  const uniq=values=>[...new Set(values.filter(Boolean).map(v=>String(v).trim()).filter(Boolean))];
+ let imageIndex=c.masterImage?1:0;
  const references=active.map(m=>{
-   const props=uniq([m.category,m.brand&&m.brand!=="Không áp dụng"?m.brand:"",m.sku,m.material,m.dimensions,m.structure,m.properties,m.notes]);
-   const files=(m.references||[]).map(r=>r.name).filter(Boolean);
+   const properties=m.properties&&typeof m.properties==="object"&&!Array.isArray(m.properties)?Object.entries(m.properties).filter(([,v])=>v!==null&&v!==undefined&&v!=="").map(([k,v])=>k+": "+String(v)).join(", "):"";
+   const props=uniq([m.category,m.brand&&m.brand!=="Không áp dụng"?m.brand:"",m.sku,m.material,m.dimensions,m.structure,properties,m.notes]);
+   const files=(m.references||[]).filter(r=>r?.name).map(r=>"ảnh đầu vào "+(++imageIndex)+": "+r.name);
    return [m.name||m.id,m.target?"vị trí: "+m.target:"",m.application?"áp dụng: "+m.application:"",props.length?"đặc điểm: "+props.join(", "):"",files.length?"ảnh: "+files.join(", "):""].filter(Boolean).join(" | ");
  });
- const context=uniq(["Loại không gian: "+c.space,zone?"Khu vực: "+zone:"",style?"Phong cách: "+style:"",c.masterImage?"Ảnh gốc: "+c.masterImage.name:"",geographicDirection(c)]).join(". ");
+ const context=uniq(["Loại không gian: "+c.space,zone?"Khu vực: "+zone:"",style?"Phong cách: "+style:"",brand?"Thương hiệu định hướng: "+brand:"",c.masterImage?"Ảnh gốc (ảnh đầu vào 1): "+c.masterImage.name:"",geographicDirection(c)]).join(". ");
  const task=uniq([c.mode==="edit"?"Chỉnh sửa ảnh gốc theo yêu cầu.":"Tạo ảnh thiết kế mới.",c.brief?.trim(),references.length?"Sản phẩm và ảnh tham chiếu (giữ đúng từng model): "+references.join("; "):""]).join(" ");
  const limits=uniq([
    c.mode==="edit"?"Giữ nguyên mọi yếu tố ngoài phạm vi chỉnh sửa.":"",
    c.locks.length?"Khóa: "+c.locks.join(", ")+".":"",
    "Ảnh tham chiếu từng sản phẩm chỉ áp dụng cho đúng sản phẩm đó; không trộn model.",
    "Không tự bịa kích thước, cấu tạo khuất hoặc xác nhận tiêu chuẩn chưa có chứng cứ.",
+   brand?"Thương hiệu chỉ định hướng thẩm mỹ; không tự xác nhận sản phẩm chính hãng hoặc sao chép mẫu độc quyền.":"",
    audit.issues.length?"Xung đột cần kiểm tra: "+audit.issues.map(i=>i.message).join("; "):""
  ]).join(" ");
  return [
   "BỐI CẢNH: "+context,
-  "VAI TRÒ: "+authority.lead+" phụ trách thiết kế; "+brains.map(b=>b.name).join(", ")+" hỗ trợ theo chuyên môn, không vượt quyền thiết kế.",
+  "VAI TRÒ: "+authority.lead+" phụ trách thiết kế và quyết định không gian; "+brains.map(b=>b.name).join(", ")+" hỗ trợ theo chuyên môn, không vượt quyền thiết kế. Chuyên gia hình ảnh không được thay đổi bố trí, hình học hoặc kiến trúc trái chỉ định.",
   "NHIỆM VỤ: "+task,
   "RÀNG BUỘC: "+limits,
-  "KẾT QUẢ: Ảnh "+(c.mode==="edit"?"chỉnh sửa":"thiết kế")+" đúng yêu cầu, tỷ lệ "+(c.aspect||"3:2 Ngang")+", góc máy "+camera+", ánh sáng "+lighting+", vật liệu và phối cảnh chân thực; "+(c.outputType||"đầu ra hình ảnh")+"."
+  "KẾT QUẢ: Ảnh "+(c.mode==="edit"?"chỉnh sửa":"thiết kế")+" đúng yêu cầu, tỷ lệ "+(c.aspect||"3:2 Ngang")+", góc máy "+camera+", ánh sáng "+lighting+", vật liệu và phối cảnh chân thực; "+(c.outputType||"đầu ra hình ảnh")+(c.size?"; kích thước API "+c.size:"")+(photo.real?"; định hướng nhiếp ảnh "+photo.selected+", độ phơi sáng và bóng đổ tự nhiên":"")+"."
  ].join("\n\n");
 }
 
