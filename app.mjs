@@ -80,21 +80,32 @@ function compile(){
      (c.referenceStyleMode==="change"?"CONTEXT: Use the uploaded reference image. ROLE: HG Design AI. TASK: Apply only the design style already selected in HG. CONSTRAINTS: Strictly preserve reference camera position, viewpoint, perspective, framing and crop. Preserve locked architecture and geometry. RESULT: New HG-selected style with unchanged reference camera.":"CONTEXT: Use the uploaded reference image. ROLE: HG Design AI. TASK: Preserve the reference design style, materials, palette and design language. CONSTRAINTS: Strictly preserve reference camera position, viewpoint, perspective, framing and crop, and locked architecture and geometry. RESULT: Original reference style and camera preserved.") :
      (c.referenceStyleMode==="change"?"BỐI CẢNH: Dùng ảnh tham chiếu đã tải. VAI TRÒ: HG Design AI. NHIỆM VỤ: Thay đổi phong cách theo đúng phong cách HG đã chỉ định trong hệ thống. RÀNG BUỘC: Giữ nguyên góc camera, vị trí máy, hướng nhìn, phối cảnh, bố cục và khung hình tham chiếu; bảo toàn kiến trúc và hình học đang khóa. KẾT QUẢ: Phong cách HG đã chọn với camera tham chiếu không đổi.":"BỐI CẢNH: Dùng ảnh tham chiếu đã tải. VAI TRÒ: HG Design AI. NHIỆM VỤ: Giữ nguyên phong cách, vật liệu, bảng màu và ngôn ngữ thiết kế của ảnh tham chiếu. RÀNG BUỘC: Giữ nguyên góc camera, vị trí máy, hướng nhìn, phối cảnh, bố cục và khung hình tham chiếu; bảo toàn kiến trúc và hình học đang khóa. KẾT QUẢ: Giữ phong cách và camera ảnh tham chiếu.")):"";
    const p=editPromptLanguage(base,language)+(referenceRule?"\n\n"+referenceRule:"");
-  $("promptOutput").textContent=p;
+  $("promptOutput").value=p;
   $("promptLanguageStatus").textContent=language==="en"?"English Language Expert: English-only output validated.":"Chuyên gia tiếng Việt: giữ nguyên đầy đủ thông tin thiết kế.";
   $("warnings").replaceChildren(...getWarnings(c).map(w=>text("p","⚠ "+w)));
   return p;
  } catch(error) {
-  $("promptOutput").textContent="Không thể biên dịch Prompt: "+error.message;
+  $("promptOutput").value="Không thể biên dịch Prompt: "+error.message;
   $("promptLanguageStatus").textContent=error.message;
   $("warnings").replaceChildren(text("p","⚠ "+error.message));
   throw error;
  }
 }
+function getEffectivePrompt(){
+ const editor=$("promptOutput");
+ const manuallyEdited=editor.dataset.userEdited==="true";
+ if(manuallyEdited){
+  const value=editor.value.trim();
+  if(!value)throw new Error("Prompt chỉnh sửa đang trống. Hãy nhập nội dung hoặc bấm BIÊN DỊCH PROMPT để tạo lại.");
+  return value;
+ }
+ return compile();
+}
+function regeneratePrompt(){ $("promptOutput").dataset.userEdited="false";return compile(); }
 function downloadText(name,content,type="text/plain"){const b=new Blob([content],{type}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2500)}
 async function readDataURL(f){return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Không đọc được "+f.name));reader.readAsDataURL(f)})}
 async function render(){
- const c=liveSettings(),prompt=compile(),w=getWarnings(c);
+ const c=liveSettings(),prompt=getEffectivePrompt(),w=getWarnings(c);
  if(!resolveImageAI(c.imageAI,c).canRender){showStatus("AI đã chọn chưa được kết nối trực tiếp. Hãy sao chép prompt và mở nền tảng AI tương ứng.",true);return}
  if(state.master&&!validImage(state.master)){showStatus("Ảnh gốc phải là JPG/PNG/WebP và không quá 5 MB.",true);return}
  if(c.mode==="edit"&&!state.master){showStatus("Cần tải ảnh gốc trước khi chỉnh sửa.",true);return}
@@ -137,7 +148,7 @@ function populate(select,values,keep){values=[...values];if(!values.includes("Kh
 function updateZone(){populate($("zone"),SPACE_CATALOG[$("space").value]||SPACE_CATALOG["Nội thất"],false);const old=$("surroundings").value;populate($("surroundings"),VIEW_CONTEXT[$("space").value]||VIEW_CONTEXT["Nội thất"],false);if([...$("surroundings").options].some(o=>o.value===old))$("surroundings").value=old;$("surroundingsLabel").firstChild.textContent=$("space").value==="Nội thất"?"Bối cảnh ngoài cửa sổ / xung quanh":$("space").value==="Kiến trúc"?"Cảnh quan xung quanh":$("space").value==="Cảnh quan"?"Sinh thái và cảnh quan":"Bối cảnh khu vực quy hoạch"}
 for(const group of [...new Set(IMAGE_PLATFORMS.map(p=>p.group))]){const g=document.createElement("optgroup");g.label=group;for(const p of IMAGE_PLATFORMS.filter(p=>p.group===group)){const o=document.createElement("option");o.value=p.id;o.textContent=p.name;g.append(o)}$("imageAI").append(g)}
 $("imageAI").addEventListener("change",drawAdvisor);
-$("copyForAI").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(compile());showStatus("Đã sao chép prompt cho AI được chọn.")}catch(e){showStatus("Không thể sao chép: "+e.message,true)}});
+$("copyForAI").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(getEffectivePrompt());showStatus("Đã sao chép prompt cho AI được chọn.")}catch(e){showStatus("Không thể sao chép: "+e.message,true)}});
 for(const [group,names] of FURNITURE_BRANDS){const g=document.createElement("optgroup");g.label=group;for(const name of names){const o=document.createElement("option");o.value=name;o.textContent=name;g.append(o)}$("furnitureBrand").append(g)}
 {const opt=document.createElement("option");opt.value="Không đề xuất";opt.textContent="Không đề xuất";$("furnitureBrand").prepend(opt)}
 $("furnitureBrand").value="Không áp dụng";
@@ -170,9 +181,10 @@ $("masterInput").onchange=e=>{const f=e.target.files?.[0];if(f){if(!validImage(f
 $("clearMaster").onclick=()=>updateMaster(null);
 $("addModel").onclick=addModel;
 $("expertMode").onchange=()=>{$("manualExperts").hidden=$("expertMode").value!=="manual"};
-$("compile").onclick=compile;
+$("compile").onclick=regeneratePrompt;
+$("promptOutput").addEventListener("input",()=>{$("promptOutput").dataset.userEdited="true";$("promptEditStatus").textContent="Đang dùng prompt Ốc đã chỉnh sửa. Bấm BIÊN DỊCH PROMPT để tạo lại từ cấu hình.";});
 $("copyPrompt").onclick=async()=>{try{await navigator.clipboard.writeText(compile());showStatus("Đã sao chép prompt.")}catch{showStatus("Không sao chép được. Hãy chọn và sao chép văn bản trong ô prompt.",true)}};
-$("downloadPrompt").onclick=()=>downloadText("hoanggia-prompt.txt",compile());
+$("downloadPrompt").onclick=()=>downloadText("hoanggia-prompt.txt",getEffectivePrompt());
 $("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"2.0",...projectSnapshot(liveSettings())},null,2),"application/json");
 $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;const v=JSON.parse(await f.text());if(!v||typeof v!=="object"||!Array.isArray(v.models))throw Error("Sai cấu trúc JSON");
  if(v.models.length>200)throw Error("Dự án có quá 200 Model");
