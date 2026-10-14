@@ -213,7 +213,10 @@ export function compilePrompt(c){
    return [m.name||m.id,m.target?"vị trí: "+m.target:"",m.application?"áp dụng: "+m.application:"",props.length?"đặc điểm: "+props.join(", "):"",files.length?"ảnh: "+files.join(", "):""].filter(Boolean).join(" | ");
  });
  const context=uniq(["Loại không gian: "+c.space,zone?"Khu vực: "+zone:"",style?"Phong cách: "+style:"",c.masterImage?"Ảnh gốc: "+c.masterImage.name:"",geographicDirection(c)]).join(". ");
- const task=uniq([c.mode==="edit"?"Chỉnh sửa ảnh gốc theo yêu cầu.":"Tạo ảnh thiết kế mới.",c.brief?.trim(),references.length?"Sản phẩm và ảnh tham chiếu (giữ đúng từng model): "+references.join("; "):""]).join(" ");
+ const selectedFurnitureBrand=String(c.furnitureBrand||"").trim();
+ const brandReplacement=selectedFurnitureBrand&&!["Không áp dụng","Không đề xuất","HG tự đề xuất"].includes(selectedFurnitureBrand)
+ ? "YÊU CẦU THAY NỘI THẤT THEO THƯƠNG HIỆU "+selectedFurnitureBrand+": Nhận diện sofa, ghế, bàn và đồ nội thất rời trong ảnh gốc; đề xuất thay bằng sản phẩm phù hợp của thương hiệu đã chọn. Ưu tiên mẫu và ảnh sản phẩm từ website chính thức, chỉ xác nhận tên/mã mẫu khi đã có nguồn kiểm chứng. Không bịa sản phẩm chính hãng. Nếu thiếu ảnh mẫu hoặc nguồn xác thực, phải thông báo cần bổ sung trước khi khẳng định thay đúng mẫu. Giữ nguyên kiến trúc, hình học, camera, cửa, trần, tường, sàn và bố cục không được yêu cầu thay. Mẫu có ảnh tham chiếu riêng do kiến trúc sư chọn được ưu tiên cao nhất, không trộn mẫu." : "";
+ const task=uniq([c.mode==="edit"?"Chỉnh sửa ảnh gốc theo yêu cầu.":"Tạo ảnh thiết kế mới.",c.brief?.trim(),brandReplacement,references.length?"Sản phẩm và ảnh tham chiếu (giữ đúng từng model): "+references.join("; "):""]).join(" ");
  const limits=uniq([
    c.mode==="edit"?"Giữ nguyên mọi yếu tố ngoài phạm vi chỉnh sửa.":"",
    c.locks.length?"Khóa: "+c.locks.join(", ")+".":"",
