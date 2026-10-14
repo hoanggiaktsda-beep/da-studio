@@ -106,6 +106,17 @@ async function render(){
  for(const m of state.models.filter(m=>m.selected)){m.references.forEach((r,i)=>{if(r.file)refs.push({file:r.file,model:m.id,index:i+1})})}
  if(refs.some(r=>!validImage(r.file))){showStatus("Mỗi ảnh tham chiếu phải là JPG/PNG/WebP và không quá 5 MB.",true);return}
  if(refs.length>16){showStatus("Chỉ hỗ trợ tối đa 16 ảnh trong một lần gọi API.",true);return}
+ const selectedBrand=String(c.furnitureBrand||"").trim();
+ const hasBrand=selectedBrand&&!["Không áp dụng","Không đề xuất","HG tự đề xuất"].includes(selectedBrand);
+ const selectedModels=state.models.filter(m=>m.selected);
+ if(hasBrand&&c.mode==="edit"&&!selectedModels.some(m=>m.references.some(r=>r.file))){
+   showStatus("Chưa có ảnh sản phẩm chính hãng để thay đúng mẫu "+selectedBrand+". Hãy thêm sofa/bàn trà vào mục 02, tải ảnh sản phẩm từ website chính thức và chỉ định vị trí thay. Chỉ chọn tên thương hiệu không đủ để thay đúng model.",true);
+   return;
+ }
+ if(hasBrand&&c.mode==="edit"&&selectedModels.some(m=>!m.references.some(r=>r.file))){
+   showStatus("Có Model đã chọn nhưng thiếu ảnh sản phẩm. Hãy tải ảnh chính hãng cho từng Model hoặc bỏ chọn Model đó.",true);
+   return;
+ }
  const estimatedBytes=JSON.stringify(makeRenderPayload(c,prompt,[])).length+refs.reduce((n,r)=>n+Math.ceil(r.file.size/3)*4+128,0);
  if(estimatedBytes>MAX_REQUEST_BYTES){showStatus("Tổng dung lượng ảnh vượt giới hạn gateway (~23 MB sau mã hóa). Hãy giảm số ảnh hoặc nén ảnh.",true);return}
  const controller=new AbortController();state.renderController=controller;
