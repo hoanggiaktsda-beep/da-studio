@@ -1,5 +1,5 @@
 import {BRAINS,CATEGORIES,LOCKS,FIELD_DEFS,createModel,getWarnings,compilePrompt,editPromptLanguage,projectSnapshot,makeRenderPayload} from "./core.mjs";
-import {SPACE_CATALOG,STYLE_OPTIONS,CAMERA_OPTIONS,LIGHTING_OPTIONS,ASPECT_OPTIONS,FURNITURE_BRANDS,OUTPUT_TYPES,PHOTO_DIRECTIONS,resolvePhotoDirection,recommendVisual,SETTING_AREAS,WEATHER_CONTEXT,SEASON_CONTEXT,VIEW_CONTEXT,AUTO_CONTEXT} from "./design-catalog.mjs";
+import {SPACE_CATALOG,STYLE_OPTIONS,CAMERA_OPTIONS,LIGHTING_OPTIONS,ASPECT_OPTIONS,FURNITURE_BRANDS,OUTPUT_TYPES,PHOTO_DIRECTIONS,resolvePhotoDirection,recommendVisual,SETTING_AREAS,WEATHER_CONTEXT,SEASON_CONTEXT,VIEW_CONTEXT,AUTO_CONTEXT} from "./design-catalog.mjs?v=20261019-cycwall";
 import {IMAGE_PLATFORMS,adviseImageWorkflow,resolveImageAI} from "./image-advisor.mjs";
 const $=id=>document.getElementById(id);
 const EMBED_CREATE=new URLSearchParams(location.search).get("embed")==="create";
