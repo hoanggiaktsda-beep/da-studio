@@ -5,7 +5,8 @@ const STYLES=[
 ["bokeh","Xóa phông","Chủ thể sắc nét, hậu cảnh mềm","Khẩu lớn; 35–135mm"],
 ["furniture","Sản phẩm nội thất","Sofa, bàn, ghế, giường","35–85mm; bảo toàn tỷ lệ"],
 ["macro","Chi tiết vật liệu","Da, vải, gỗ, đá, đường may","Macro lấy nét gần"],
-["cinematic","Cinematic Luxury","Chiều sâu, cảm xúc điện ảnh","24–85mm; ánh sáng có chủ đích"]
+["cinematic","Cinematic Luxury","Chiều sâu, cảm xúc điện ảnh","24–85mm; ánh sáng có chủ đích"],
+["flycam","Flycam · Góc nhìn trên cao","Toàn cảnh công trình, quy hoạch, phối cảnh từ trên cao","Góc nhìn aerial; giữ hình khối công trình chính xác"]
 ];
 const db=[
 ["Sony","FE",["A7R V","A1 II","A7 IV","A7CR","A7S III","A9 III","A7 III","A7C II","A7R IV","A7R III"],[
@@ -23,6 +24,19 @@ const db=[
 ["Phase One","XF",["XF IQ4 150MP","XF IQ4 100MP"],[
 ["Schneider Kreuznach 35mm LS f/3.5","interior architecture"],["Schneider Kreuznach 55mm LS f/2.8","interior furniture"],["Schneider Kreuznach 80mm LS f/2.8","furniture cinematic"],["Schneider Kreuznach 120mm LS f/4 Macro","macro"],["Schneider Kreuznach 150mm LS f/2.8","bokeh furniture"]]]
 ];
+const drones=[
+["DJI","Camera tích hợp / ngàm DL",["Mavic 4 Pro","Air 3S","Mini 4 Pro","Inspire 3"],[
+["Hasselblad 4/3 CMOS 28mm tương đương","flycam",["Mavic 4 Pro"]],["Tele 70mm / 168mm tương đương","flycam",["Mavic 4 Pro"]],
+["Camera chính 24mm tương đương","flycam",["Air 3S","Mini 4 Pro"]],["Tele 70mm tương đương","flycam",["Air 3S"]],
+["Zenmuse X9-8K Air · DL 18mm","flycam",["Inspire 3"]],["Zenmuse X9-8K Air · DL 24mm","flycam",["Inspire 3"]],["Zenmuse X9-8K Air · DL 35mm","flycam",["Inspire 3"]]]],
+["Autel Robotics","Camera tích hợp",["EVO II Pro V3","EVO Max 4T"],[
+["Camera 1-inch CMOS · 29mm tương đương","flycam",["EVO II Pro V3"]],["Camera góc rộng tích hợp","flycam",["EVO Max 4T"]]]],
+["Skydio","Camera tích hợp",["X10"],[["Camera góc rộng / tele tích hợp","flycam",["X10"]]]],
+["Parrot","Camera tích hợp",["ANAFI Ai"],[["Camera 48MP · 24mm tương đương","flycam",["ANAFI Ai"]]]],
+["Freefly Systems","Payload phụ thuộc cấu hình",["Astro"],[["Payload camera khảo sát · kiểm tra cấu hình lắp đặt","flycam",["Astro"]]]],
+["Sony","Payload chuyên dụng",["Airpeak S1"],[["Camera Sony Alpha tương thích · kiểm tra gimbal, tải trọng và lens","flycam",["Airpeak S1"]]]],
+["Yuneec","Payload chuyên dụng",["H850-RTK"],[["Payload E90X · góc rộng","flycam",["H850-RTK"]]]]
+];
 const el=id=>document.getElementById(id);
 const make=(tag,txt)=>{const n=document.createElement(tag);if(txt)n.textContent=txt;return n};
 const opt=(v,t)=>{const n=make("option",t);n.value=v;return n};
@@ -30,34 +44,37 @@ const $panel=el("hgCameraAI");
 if($panel){
  const mode=el("hgCamMode"),style=el("hgCamStyle"),brand=el("hgCamBrand"),body=el("hgCamBody"),lens=el("hgCamLens"),aperture=el("hgCamAperture"),focus=el("hgCamFocus"),lock=el("hgCamLock"),all=el("hgCamAll"),summary=el("hgCamSummary");
  STYLES.forEach(s=>style.append(opt(s[0],s[1]+" — "+s[2])));
- db.forEach(d=>brand.append(opt(d[0],d[0])));
+ const optionsForStyle=()=>style.value==="flycam"?drones:db;
+ const refillBrand=()=>{const previous=brand.value;const group=optionsForStyle();brand.replaceChildren(...group.map(d=>opt(d[0],d[0])));if(group.some(d=>d[0]===previous))brand.value=previous;};
  const purpose=()=>STYLES.find(s=>s[0]===style.value)||STYLES[0];
- const current=()=>db.find(d=>d[0]===brand.value)||db[0];
+ const current=()=>optionsForStyle().find(d=>d[0]===brand.value)||optionsForStyle()[0];
  const refresh=()=>{
    const d=current(),oldBody=body.value,oldLens=lens.value;
    body.replaceChildren(...d[2].map(x=>opt(x,d[0]+" "+x)));
    if(d[2].includes(oldBody))body.value=oldBody;
-   const filtered=d[3].filter(x=>all.checked||x[1].split(" ").includes(style.value));
+   const filtered=d[3].filter(x=>(!x[2]||x[2].includes(body.value))&&(style.value==="flycam"||all.checked||x[1].split(" ").includes(style.value)));
    lens.replaceChildren(...filtered.map(x=>opt(x[0],d[0]+" "+x[0])));
    if(filtered.some(x=>x[0]===oldLens))lens.value=oldLens;
+   all.closest("label").hidden=style.value==="flycam";
    summary.textContent=(mode.value==="auto"?"AI đề xuất: ":"Đang chọn: ")+d[0]+" "+body.value+" · "+d[0]+" "+(lens.value||"Chưa có lens phù hợp")+" · "+aperture.value+". "+purpose()[3]+".";
    el("hgCamManual").hidden=mode.value==="auto";
    el("hgCamAuto").hidden=mode.value!=="auto";
    el("hgCamAuto").textContent="Gợi ý theo mục đích: "+purpose()[3]+". "+d[0]+" "+body.value+" · "+(lens.value||"Chưa có lens")+". Có thể chuyển MANUAL PRO để tùy chỉnh.";
  };
- [mode,style,brand,body,lens,aperture,focus,lock,all].forEach(n=>n.addEventListener("change",refresh));
+ style.addEventListener("change",()=>{refillBrand();refresh();});
+ [mode,brand,body,lens,aperture,focus,lock,all].forEach(n=>n.addEventListener("change",refresh));
  window.hgCameraAI={
   getSnapshot:()=>({mode:mode.value,style:style.value,brand:brand.value,body:body.value,lens:lens.value,aperture:aperture.value,focus:focus.value,lock:lock.checked,showAll:all.checked}),
-  restore(v){if(!v||typeof v!=="object")return;for(const [n,k] of [[mode,"mode"],[style,"style"],[brand,"brand"]])if(typeof v[k]==="string"&&[...n.options].some(o=>o.value===v[k]))n.value=v[k];refresh();for(const [n,k] of [[body,"body"],[lens,"lens"],[aperture,"aperture"],[focus,"focus"]])if(typeof v[k]==="string"&&[...n.options].some(o=>o.value===v[k]))n.value=v[k];lock.checked=v.lock!==false;all.checked=v.showAll===true;refresh()},
-  reset(){mode.value="auto";style.value="interior";brand.value="Sony";aperture.value="f/8";focus.value="all";lock.checked=true;all.checked=false;refresh()},
+  restore(v){if(!v||typeof v!=="object")return;for(const [n,k] of [[mode,"mode"],[style,"style"],[brand,"brand"]])if(typeof v[k]==="string"&&[...n.options].some(o=>o.value===v[k]))n.value=v[k];refillBrand();if(typeof v.brand==="string"&&[...brand.options].some(o=>o.value===v.brand))brand.value=v.brand;refresh();for(const [n,k] of [[body,"body"],[lens,"lens"],[aperture,"aperture"],[focus,"focus"]])if(typeof v[k]==="string"&&[...n.options].some(o=>o.value===v[k]))n.value=v[k];lock.checked=v.lock!==false;all.checked=v.showAll===true;refresh()},
+  reset(){mode.value="auto";style.value="interior";brand.value="Sony";aperture.value="f/8";focus.value="all";lock.checked=true;all.checked=false;refillBrand();refresh()},
   getPrompt(lang="vi"){
    const s=purpose(),d=current(),chosen=d[3].find(x=>x[0]===lens.value);
    if(!chosen)return "";
    const focusText={auto:"AI-selected subject focus",subject:"sharp main subject with softly blurred background",all:"deep focus across the scene"}[focus.value];
    const lockText=lock.checked?"Preserve original viewpoint, framing, geometry, vertical lines and furniture proportions.":"Adjust photographic viewpoint only if explicitly required; preserve architecture and furniture proportions.";
-   const en="CAMERA AI V1.1: Photography purpose: "+({interior:"interior",architecture:"architecture",bokeh:"background bokeh",furniture:"furniture product",macro:"material macro",cinematic:"cinematic luxury"}[s[0]])+". Camera body: "+d[0]+" "+body.value+" ("+d[1]+" mount). Lens: "+d[0]+" "+lens.value+". Aperture target: "+aperture.value+" (respect physical lens aperture limits). Focus: "+focusText+". "+lockText+" Optical rendering is a photographic simulation, not a claim of actual camera capture.";
-   return lang==="en"?en:"THIẾT LẬP CAMERA AI V1.1 (mô phỏng nhiếp ảnh): "+s[1]+". Thân máy: "+d[0]+" "+body.value+" (ngàm "+d[1]+"). Ống kính: "+d[0]+" "+lens.value+". Khẩu độ mục tiêu: "+aperture.value+" (giới hạn theo thông số thực của lens). Lấy nét: "+({auto:"AI tự chọn chủ thể",subject:"nét chủ thể, mờ hậu cảnh",all:"nét toàn bộ không gian"}[focus.value])+". "+(lock.checked?"Khóa góc nhìn, bố cục, hình học, đường đứng và tỷ lệ nội thất.":"Chỉ thay góc nhìn khi có yêu cầu; bảo toàn kiến trúc và tỷ lệ nội thất.")+" Đây là mô phỏng quang học, không phải ảnh chụp bằng thiết bị thật.";
+   const en="CAMERA AI V1.2: Photography purpose: "+({interior:"interior",architecture:"architecture",bokeh:"background bokeh",furniture:"furniture product",macro:"material macro",cinematic:"cinematic luxury",flycam:"aerial architectural photography / drone shot"}[s[0]])+". Camera body: "+d[0]+" "+body.value+" ("+d[1]+" mount). Lens: "+d[0]+" "+lens.value+". Aperture target: "+aperture.value+" (respect physical lens aperture limits). Focus: "+focusText+". "+lockText+" Optical rendering is a photographic simulation, not a claim of actual camera capture.";
+   return lang==="en"?en:"THIẾT LẬP CAMERA AI V1.2 (mô phỏng nhiếp ảnh): "+s[1]+". Thân máy: "+d[0]+" "+body.value+" (ngàm "+d[1]+"). Ống kính: "+d[0]+" "+lens.value+". Khẩu độ mục tiêu: "+aperture.value+" (giới hạn theo thông số thực của lens). Lấy nét: "+({auto:"AI tự chọn chủ thể",subject:"nét chủ thể, mờ hậu cảnh",all:"nét toàn bộ không gian"}[focus.value])+". "+(lock.checked?"Khóa góc nhìn, bố cục, hình học, đường đứng và tỷ lệ nội thất.":"Chỉ thay góc nhìn khi có yêu cầu; bảo toàn kiến trúc và tỷ lệ nội thất.")+" Đây là mô phỏng quang học, không phải ảnh chụp bằng thiết bị thật.";
   }
  };
- refresh();
+ refillBrand();refresh();
 }
