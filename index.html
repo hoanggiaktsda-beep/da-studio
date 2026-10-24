@@ -44,10 +44,10 @@
 <label>04 · Lens phù hợp<select id="hgCamLens"></select></label>
 <label class="hg-cam-check"><input id="hgCamAll" type="checkbox"> Xem tất cả lens cùng hệ máy (nâng cao)</label>
 </div>
-<div class="hg-cam-grid"><label>Khẩu độ mô phỏng<select id="hgCamAperture"><option>f/1.4</option><option>f/1.8</option><option>f/2.8</option><option>f/4</option><option>f/5.6</option><option selected>f/8</option><option>f/11</option><option>f/16</option></select></label><label>Lấy nét<select id="hgCamFocus"><option value="auto">AI tự chọn</option><option value="subject">Nét chủ thể, mờ hậu cảnh</option><option value="all" selected>Nét toàn bộ không gian</option></select></label></div>
+<div class="hg-cam-grid"><label>Khẩu độ · AI tự đề xuất<select id="hgCamAperture"><option value="auto">AI đang đề xuất theo kiểu ảnh và lens</option></select></label><label>Lấy nét<select id="hgCamFocus"><option value="auto">AI tự chọn</option><option value="subject">Nét chủ thể, mờ hậu cảnh</option><option value="all" selected>Nét toàn bộ không gian</option></select></label></div>
 <label class="hg-cam-check"><input id="hgCamLock" type="checkbox" checked> Khóa góc máy và bố cục ảnh gốc</label>
 <div id="hgCamSummary" class="hg-cam-summary" role="status"></div>
-<p class="hg-cam-note">Các thiết lập là hướng dẫn mô phỏng quang học cho AI, không phải điều khiển máy ảnh vật lý. Kiểm tra adapter với lens Tilt-Shift.</p>
+<p class="hg-cam-note">Khẩu độ tự thay đổi theo kiểu ảnh, lấy nét và giới hạn ống kính. AUTO AI khóa chỉnh tay, MANUAL PRO chỉ hiện các mức hợp lệ. Các thiết lập là hướng dẫn mô phỏng quang học cho AI, không phải điều khiển máy ảnh vật lý. Kiểm tra adapter với lens Tilt-Shift.</p>
 </section><details class="site-context" open><summary>BỐI CẢNH ĐỊA LÝ & MÔI TRƯỜNG <small>HG tự xử lý hoặc chỉ định thực tế</small></summary>
 <div class="grid-two"><label>Quốc gia<input id="country" list="countrySuggestions" value="HG tự xử lý" maxlength="90" aria-label="Quốc gia"></label><label>Thành phố<input id="city" list="citySuggestions" value="HG tự xử lý" maxlength="90" aria-label="Thành phố"></label></div>
 <datalist id="countrySuggestions"><option value="HG tự xử lý"><option value="Việt Nam"><option value="Pháp"><option value="Nhật Bản"><option value="Singapore"><option value="Hoa Kỳ"><option value="Ý"><option value="Trung Quốc"><option value="UAE"><option value="Thái Lan"><option value="Hàn Quốc"></datalist>
@@ -123,6 +123,6 @@
   <footer>HOANGGIA AI · XƯỞNG THIẾT KẾ V2.0 <span>Ảnh không lưu trên GitHub · Bản phát triển</span></footer>
  </main>
 </div>
-<script type="module" src="./camera-ai.mjs?v=20261024-v12"></script>
+<script type="module" src="./camera-ai.mjs?v=20261024-v13"></script>
 <script type="module" src="./app.mjs?v=20261024-camera-v11"></script>
 </body></html>
