@@ -37,6 +37,9 @@ const drones=[
 ["Sony","Payload chuyên dụng",["Airpeak S1"],[["Camera Sony Alpha tương thích · kiểm tra gimbal, tải trọng và lens","flycam",["Airpeak S1"]]]],
 ["Yuneec","Payload chuyên dụng",["H850-RTK"],[["Payload E90X · góc rộng","flycam",["H850-RTK"]]]]
 ];
+const APERTURES=[1.2,1.4,1.8,2,2.8,3.5,4,4.5,5.6,8,11,16,22];
+const preferred={interior:8,architecture:8,bokeh:1.8,furniture:5.6,macro:11,cinematic:2.8,flycam:5.6};
+function minimumF(name){const values=[...name.matchAll(/(?:f\\/?|F)(\\d+(?:\\.\\d+)?)/g)].map(m=>Number(m[1]));return values.length?Math.max(...values):null;}
 const el=id=>document.getElementById(id);
 const make=(tag,txt)=>{const n=document.createElement(tag);if(txt)n.textContent=txt;return n};
 const opt=(v,t)=>{const n=make("option",t);n.value=v;return n};
@@ -48,6 +51,19 @@ if($panel){
  const refillBrand=()=>{const previous=brand.value;const group=optionsForStyle();brand.replaceChildren(...group.map(d=>opt(d[0],d[0])));if(group.some(d=>d[0]===previous))brand.value=previous;};
  const purpose=()=>STYLES.find(s=>s[0]===style.value)||STYLES[0];
  const current=()=>optionsForStyle().find(d=>d[0]===brand.value)||optionsForStyle()[0];
+ let manualAperture=null;
+ const updateAperture=()=>{
+ const min=minimumF(lens.value), drone=style.value==="flycam";
+ const target=focus.value==="subject"?Math.min(preferred[style.value]||4,2.8):focus.value==="all"?Math.max(preferred[style.value]||8,8):preferred[style.value]||8;
+ const valid=APERTURES.filter(v=>min===null||v>=min);
+ aperture.replaceChildren();
+ if(drone&&min===null){aperture.append(opt("auto","Theo camera Flycam (chưa xác minh khẩu độ)"));aperture.disabled=true;return;}
+ if(!valid.length){aperture.append(opt("auto","Theo camera"));aperture.disabled=true;return;}
+ valid.forEach(v=>aperture.append(opt("f/"+v,"f/"+v)));
+ const best=valid.reduce((a,b)=>Math.abs(b-target)<Math.abs(a-target)?b:a,valid[0]);
+ aperture.value=mode.value==="manual"&&manualAperture&&valid.some(v=>"f/"+v===manualAperture)?manualAperture:"f/"+best;
+ aperture.disabled=mode.value!=="manual";
+ };
  const refresh=()=>{
    const d=current(),oldBody=body.value,oldLens=lens.value;
    body.replaceChildren(...d[2].map(x=>opt(x,d[0]+" "+x)));
@@ -56,24 +72,26 @@ if($panel){
    lens.replaceChildren(...filtered.map(x=>opt(x[0],d[0]+" "+x[0])));
    if(filtered.some(x=>x[0]===oldLens))lens.value=oldLens;
    all.closest("label").hidden=style.value==="flycam";
+   updateAperture();
    summary.textContent=(mode.value==="auto"?"AI đề xuất: ":"Đang chọn: ")+d[0]+" "+body.value+" · "+d[0]+" "+(lens.value||"Chưa có lens phù hợp")+" · "+aperture.value+". "+purpose()[3]+".";
    el("hgCamManual").hidden=mode.value==="auto";
    el("hgCamAuto").hidden=mode.value!=="auto";
    el("hgCamAuto").textContent="Gợi ý theo mục đích: "+purpose()[3]+". "+d[0]+" "+body.value+" · "+(lens.value||"Chưa có lens")+". Có thể chuyển MANUAL PRO để tùy chỉnh.";
  };
- style.addEventListener("change",()=>{refillBrand();refresh();});
- [mode,brand,body,lens,aperture,focus,lock,all].forEach(n=>n.addEventListener("change",refresh));
+ style.addEventListener("change",()=>{manualAperture=null;refillBrand();refresh();});
+ [mode,brand,body,lens,focus,lock,all].forEach(n=>n.addEventListener("change",()=>{if(n!==lock&&n!==all)manualAperture=null;refresh();}));
+ aperture.addEventListener("change",()=>{manualAperture=aperture.value;refresh();});
  window.hgCameraAI={
   getSnapshot:()=>({mode:mode.value,style:style.value,brand:brand.value,body:body.value,lens:lens.value,aperture:aperture.value,focus:focus.value,lock:lock.checked,showAll:all.checked}),
-  restore(v){if(!v||typeof v!=="object")return;for(const [n,k] of [[mode,"mode"],[style,"style"],[brand,"brand"]])if(typeof v[k]==="string"&&[...n.options].some(o=>o.value===v[k]))n.value=v[k];refillBrand();if(typeof v.brand==="string"&&[...brand.options].some(o=>o.value===v.brand))brand.value=v.brand;refresh();for(const [n,k] of [[body,"body"],[lens,"lens"],[aperture,"aperture"],[focus,"focus"]])if(typeof v[k]==="string"&&[...n.options].some(o=>o.value===v[k]))n.value=v[k];lock.checked=v.lock!==false;all.checked=v.showAll===true;refresh()},
-  reset(){mode.value="auto";style.value="interior";brand.value="Sony";aperture.value="f/8";focus.value="all";lock.checked=true;all.checked=false;refillBrand();refresh()},
+  restore(v){if(!v||typeof v!=="object")return;for(const [n,k] of [[mode,"mode"],[style,"style"],[brand,"brand"]])if(typeof v[k]==="string"&&[...n.options].some(o=>o.value===v[k]))n.value=v[k];refillBrand();if(typeof v.brand==="string"&&[...brand.options].some(o=>o.value===v.brand))brand.value=v.brand;refresh();for(const [n,k] of [[body,"body"],[lens,"lens"],[aperture,"aperture"],[focus,"focus"]])if(typeof v[k]==="string"&&[...n.options].some(o=>o.value===v[k]))n.value=v[k];lock.checked=v.lock!==false;all.checked=v.showAll===true;manualAperture=typeof v.aperture==="string"?v.aperture:null;refresh()},
+  reset(){mode.value="auto";style.value="interior";brand.value="Sony";manualAperture=null;focus.value="all";lock.checked=true;all.checked=false;refillBrand();refresh()},
   getPrompt(lang="vi"){
    const s=purpose(),d=current(),chosen=d[3].find(x=>x[0]===lens.value);
    if(!chosen)return "";
    const focusText={auto:"AI-selected subject focus",subject:"sharp main subject with softly blurred background",all:"deep focus across the scene"}[focus.value];
    const lockText=lock.checked?"Preserve original viewpoint, framing, geometry, vertical lines and furniture proportions.":"Adjust photographic viewpoint only if explicitly required; preserve architecture and furniture proportions.";
-   const en="CAMERA AI V1.2: Photography purpose: "+({interior:"interior",architecture:"architecture",bokeh:"background bokeh",furniture:"furniture product",macro:"material macro",cinematic:"cinematic luxury",flycam:"aerial architectural photography / drone shot"}[s[0]])+". Camera body: "+d[0]+" "+body.value+" ("+d[1]+" mount). Lens: "+d[0]+" "+lens.value+". Aperture target: "+aperture.value+" (respect physical lens aperture limits). Focus: "+focusText+". "+lockText+" Optical rendering is a photographic simulation, not a claim of actual camera capture.";
-   return lang==="en"?en:"THIẾT LẬP CAMERA AI V1.2 (mô phỏng nhiếp ảnh): "+s[1]+". Thân máy: "+d[0]+" "+body.value+" (ngàm "+d[1]+"). Ống kính: "+d[0]+" "+lens.value+". Khẩu độ mục tiêu: "+aperture.value+" (giới hạn theo thông số thực của lens). Lấy nét: "+({auto:"AI tự chọn chủ thể",subject:"nét chủ thể, mờ hậu cảnh",all:"nét toàn bộ không gian"}[focus.value])+". "+(lock.checked?"Khóa góc nhìn, bố cục, hình học, đường đứng và tỷ lệ nội thất.":"Chỉ thay góc nhìn khi có yêu cầu; bảo toàn kiến trúc và tỷ lệ nội thất.")+" Đây là mô phỏng quang học, không phải ảnh chụp bằng thiết bị thật.";
+   const en="CAMERA AI V1.2: Photography purpose: "+({interior:"interior",architecture:"architecture",bokeh:"background bokeh",furniture:"furniture product",macro:"material macro",cinematic:"cinematic luxury",flycam:"aerial architectural photography / drone shot"}[s[0]])+". Camera body: "+d[0]+" "+body.value+" ("+d[1]+" mount). Lens: "+d[0]+" "+lens.value+". Aperture target: "+(aperture.value==="auto"?"controlled by aircraft camera / unspecified":aperture.value)+" (respect physical lens aperture limits). Focus: "+focusText+". "+lockText+" Optical rendering is a photographic simulation, not a claim of actual camera capture.";
+   return lang==="en"?en:"THIẾT LẬP CAMERA AI V1.2 (mô phỏng nhiếp ảnh): "+s[1]+". Thân máy: "+d[0]+" "+body.value+" (ngàm "+d[1]+"). Ống kính: "+d[0]+" "+lens.value+". Khẩu độ mục tiêu: "+(aperture.value==="auto"?"theo camera, không áp đặt khẩu độ chưa xác minh":aperture.value)+" (giới hạn theo thông số thực của lens). Lấy nét: "+({auto:"AI tự chọn chủ thể",subject:"nét chủ thể, mờ hậu cảnh",all:"nét toàn bộ không gian"}[focus.value])+". "+(lock.checked?"Khóa góc nhìn, bố cục, hình học, đường đứng và tỷ lệ nội thất.":"Chỉ thay góc nhìn khi có yêu cầu; bảo toàn kiến trúc và tỷ lệ nội thất.")+" Đây là mô phỏng quang học, không phải ảnh chụp bằng thiết bị thật.";
   }
  };
  refillBrand();refresh();
