@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0d0e0d">
+<meta name="description" content="HOANGGIA CAMERA & LENS AI V1.1 — mô-đun độc lập, có thể tích hợp nhiều ứng dụng.">
+<title>HOANGGIA · CAMERA & LENS AI V1.1</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#090b0a;color:#eee9dc}
+*{box-sizing:border-box}body{margin:0;padding:18px;max-width:920px;margin-inline:auto}
+h1{font-size:clamp(18px,3vw,26px);color:#d8b977;margin:0 0 4px}
+header{padding:12px 6px 20px;border-bottom:1px solid #39352b;margin-bottom:12px}
+header p{color:#a7a69f;font-size:13px;margin:0}
+.panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#d6b46e;font-size:12px;letter-spacing:.07em;font-weight:700}
+.mini{font-size:10px;color:#8c8c83}
+select{padding:11px;border-radius:8px;border:1px solid #494b47;background:#171a18;color:#f1efe8;font:inherit}
+label{color:#eee9dc}input[type=checkbox]{accent-color:#c7aa6b}
+button{padding:11px 14px;border-radius:8px;background:#c7aa6b;border:0;color:#12110e;font-weight:700;cursor:pointer}
+button:focus-visible,select:focus-visible{outline:2px solid #ead09a;outline-offset:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+#hgExport{background:#282c29;color:#f2ebdf;border:1px solid #72664f}
+#hgFeedback{font-size:13px;color:#c9bc9d;min-height:20px}
+</style>
+<style id="hg-camera-ai-style">
+#hgCameraAI{margin:14px 0;padding:16px;border:1px solid #9c8964;border-radius:14px;background:rgba(199,170,107,.065)}
+#hgCameraAI .hg-cam-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#hgCameraAI label{display:block;margin:8px 0;font-size:13px;font-weight:600}
+#hgCameraAI select{display:block;width:100%;max-width:100%;margin-top:6px}
+#hgCameraAI .hg-cam-note{color:#c7baa1;font-size:12px;line-height:1.5;margin:8px 0}
+#hgCameraAI .hg-cam-summary{padding:12px;background:rgba(199,170,107,.1);border-radius:9px;margin-top:10px;font-size:13px;line-height:1.6}
+#hgCameraAI .hg-cam-check{display:flex;align-items:center;gap:8px;font-size:12px}
+#hgCameraAI .hg-cam-check input{width:auto}
+@media(max-width:620px){#hgCameraAI .hg-cam-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>HOANGGIA CAMERA &amp; LENS AI</h1><p>V1.1 · Bộ điều khiển nhiếp ảnh độc lập · Dùng chung cho hệ sinh thái HOANGGIA AI</p></header>
+<main><section id="hgCameraAI" aria-label="HOANGGIA CAMERA AI V1.1">
+<div class="panel-heading"><span class="eyebrow">CAMERA &amp; LENS AI · V1.1</span><span class="mini">SMART LENS FILTER</span></div>
+<label>Chế độ điều khiển<select id="hgCamMode"><option value="auto">AUTO AI — Đề xuất theo kiểu ảnh</option><option value="manual">MANUAL PRO — Tự lựa chọn</option></select></label>
+<label>01 · Kiểu ảnh mong muốn<select id="hgCamStyle"></select></label>
+<p class="hg-cam-note">Chọn kiểu ảnh trước. Hệ thống tự lọc lens theo mục đích và hệ máy. Lens có thể thuộc nhiều kiểu ảnh.</p>
+<div id="hgCamAuto" class="hg-cam-summary"></div>
+<div id="hgCamManual">
+<div class="hg-cam-grid"><label>02 · Hãng máy<select id="hgCamBrand"></select></label><label>03 · Thân máy<select id="hgCamBody"></select></label></div>
+<label>04 · Lens phù hợp<select id="hgCamLens"></select></label>
+<label class="hg-cam-check"><input id="hgCamAll" type="checkbox"> Xem tất cả lens cùng hệ máy (nâng cao)</label>
+</div>
+<div class="hg-cam-grid"><label>Khẩu độ mô phỏng<select id="hgCamAperture"><option>f/1.4</option><option>f/1.8</option><option>f/2.8</option><option>f/4</option><option>f/5.6</option><option selected>f/8</option><option>f/11</option><option>f/16</option></select></label><label>Lấy nét<select id="hgCamFocus"><option value="auto">AI tự chọn</option><option value="subject">Nét chủ thể, mờ hậu cảnh</option><option value="all" selected>Nét toàn bộ không gian</option></select></label></div>
+<label class="hg-cam-check"><input id="hgCamLock" type="checkbox" checked> Khóa góc máy và bố cục ảnh gốc</label>
+<div id="hgCamSummary" class="hg-cam-summary" role="status"></div>
+<p class="hg-cam-note">Các thiết lập là hướng dẫn mô phỏng quang học cho AI, không phải điều khiển máy ảnh vật lý. Kiểm tra adapter với lens Tilt-Shift.</p>
+</section>
+<div class="actions"><button id="hgCopy">SAO CHÉP PROMPT CAMERA</button><button id="hgExport">XUẤT CẤU HÌNH JSON</button></div>
+<p id="hgFeedback" role="status" aria-live="polite"></p>
+</main>
+<script type="module" src="../camera-ai.mjs?v=20261024-v11"></script>
+<script type="module">
+const feedback=document.getElementById("hgFeedback");
+document.getElementById("hgCopy").addEventListener("click",async()=>{
+ try{await navigator.clipboard.writeText(window.hgCameraAI.getPrompt("vi"));feedback.textContent="Đã sao chép prompt camera."}
+ catch{feedback.textContent="Trình duyệt không cho phép sao chép tự động."}
+});
+document.getElementById("hgExport").addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify({version:"1.1",cameraAI:window.hgCameraAI.getSnapshot()},null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="hoanggia-camera-ai-v1.1.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+window.addEventListener("message",e=>{
+ if(e.origin!==location.origin||!e.data||e.data.type!=="HG_CAMERA_RESTORE")return;
+ window.hgCameraAI?.restore(e.data.cameraAI);
+});
+document.getElementById("hgCameraAI").addEventListener("change",()=>{
+ if(window.parent!==window)window.parent.postMessage({type:"HG_CAMERA_CHANGE",cameraAI:window.hgCameraAI?.getSnapshot()} ,location.origin);
+});
+</script>
+</body></html>
