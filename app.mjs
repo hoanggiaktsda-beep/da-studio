@@ -79,7 +79,7 @@ function compile(){
    const referenceRule=c.masterImage?(language==="en"?
      (c.referenceStyleMode==="change"?"CONTEXT: Use the uploaded reference image. ROLE: HG Design AI. TASK: Apply only the design style already selected in HG. CONSTRAINTS: Strictly preserve reference camera position, viewpoint, perspective, framing and crop. Preserve locked architecture and geometry. RESULT: New HG-selected style with unchanged reference camera.":"CONTEXT: Use the uploaded reference image. ROLE: HG Design AI. TASK: Preserve the reference design style, materials, palette and design language. CONSTRAINTS: Strictly preserve reference camera position, viewpoint, perspective, framing and crop, and locked architecture and geometry. RESULT: Original reference style and camera preserved.") :
      (c.referenceStyleMode==="change"?"BỐI CẢNH: Dùng ảnh tham chiếu đã tải. VAI TRÒ: HG Design AI. NHIỆM VỤ: Thay đổi phong cách theo đúng phong cách HG đã chỉ định trong hệ thống. RÀNG BUỘC: Giữ nguyên góc camera, vị trí máy, hướng nhìn, phối cảnh, bố cục và khung hình tham chiếu; bảo toàn kiến trúc và hình học đang khóa. KẾT QUẢ: Phong cách HG đã chọn với camera tham chiếu không đổi.":"BỐI CẢNH: Dùng ảnh tham chiếu đã tải. VAI TRÒ: HG Design AI. NHIỆM VỤ: Giữ nguyên phong cách, vật liệu, bảng màu và ngôn ngữ thiết kế của ảnh tham chiếu. RÀNG BUỘC: Giữ nguyên góc camera, vị trí máy, hướng nhìn, phối cảnh, bố cục và khung hình tham chiếu; bảo toàn kiến trúc và hình học đang khóa. KẾT QUẢ: Giữ phong cách và camera ảnh tham chiếu.")):"";
-   const p=editPromptLanguage(base,language)+(referenceRule?"\n\n"+referenceRule:"");
+   const p=editPromptLanguage(base,language)+(referenceRule?"\n\n"+referenceRule:"")+(window.hgCameraAI?.getPrompt(language)?"\n\n"+window.hgCameraAI.getPrompt(language):"");
   $("promptOutput").value=p;
   $("promptLanguageStatus").textContent=language==="en"?"English Language Expert: English-only output validated.":"Chuyên gia tiếng Việt: giữ nguyên đầy đủ thông tin thiết kế.";
   $("warnings").replaceChildren(...getWarnings(c).map(w=>text("p","⚠ "+w)));
@@ -185,7 +185,7 @@ $("compile").onclick=regeneratePrompt;
 $("promptOutput").addEventListener("input",()=>{$("promptOutput").dataset.userEdited="true";$("promptEditStatus").textContent="Đang dùng prompt Ốc đã chỉnh sửa. Bấm BIÊN DỊCH PROMPT để tạo lại từ cấu hình.";});
 $("copyPrompt").onclick=async()=>{try{await navigator.clipboard.writeText(compile());showStatus("Đã sao chép prompt.")}catch{showStatus("Không sao chép được. Hãy chọn và sao chép văn bản trong ô prompt.",true)}};
 $("downloadPrompt").onclick=()=>downloadText("hoanggia-prompt.txt",getEffectivePrompt());
-$("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"2.0",...projectSnapshot(liveSettings())},null,2),"application/json");
+$("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"2.0",...projectSnapshot(liveSettings()),cameraAI:window.hgCameraAI?.getSnapshot()},null,2),"application/json");
 $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;const v=JSON.parse(await f.text());if(!v||typeof v!=="object"||!Array.isArray(v.models))throw Error("Sai cấu trúc JSON");
  if(v.models.length>200)throw Error("Dự án có quá 200 Model");
  for(const item of v.models)if(!item||typeof item!=="object"||Array.isArray(item))throw Error("Model không hợp lệ");if(state.renderController){state.renderController.abort();state.renderController=null}for(const m of state.models)revokeRefs(m);state.models=v.models.map(()=>null).map((_,i)=>{const o=v.models[i],m=createModel();return {...m,...o,id:m.id,references:[],properties:o.properties&&typeof o.properties==="object"&&!Array.isArray(o.properties)?o.properties:{},notes:(o.notes||"")+(o.references?.length?" [Cần tải lại ảnh gốc sau khi nhập JSON.]":"")}});if(typeof v.space==="string"&&SPACE_CATALOG[v.space]){$("space").value=v.space;updateZone()}
@@ -203,7 +203,7 @@ $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)retu
  if(v.aspect){const option=[...$("aspect").options].find(x=>x.textContent===v.aspect);if(option)$("aspect").selectedIndex=option.index}updateRenderHints()
  state.generated=null;$("resultView").removeAttribute("src");$("resultView").hidden=true;$("resultEmpty").hidden=false;$("downloadResult").hidden=true;
  $("promptOutput").textContent="Prompt đã biên dịch sẽ hiển thị tại đây...";$("warnings").replaceChildren();
- document.querySelector('input[name="hgReferenceStyle"][value="'+(v.referenceStyleMode==="change"?"change":"keep")+'"]').checked=true;document.querySelector('input[name="hgReferenceStyle"]:checked').dispatchEvent(new Event("change"));setMode(v.mode==="edit"?"edit":"create");drawModels();updateMaster(null);updateRenderHints();updatePhotoAdvice();showStatus("Đã nhập cấu hình. Vì lý do bảo mật, vui lòng tải lại file ảnh gốc.");}catch(e){showStatus("Không nhập được JSON: "+e.message,true)}finally{e.target.value=""}};
+ document.querySelector('input[name="hgReferenceStyle"][value="'+(v.referenceStyleMode==="change"?"change":"keep")+'"]').checked=true;document.querySelector('input[name="hgReferenceStyle"]:checked').dispatchEvent(new Event("change"));window.hgCameraAI?.restore(v.cameraAI);setMode(v.mode==="edit"?"edit":"create");drawModels();updateMaster(null);updateRenderHints();updatePhotoAdvice();showStatus("Đã nhập cấu hình. Vì lý do bảo mật, vui lòng tải lại file ảnh gốc.");}catch(e){showStatus("Không nhập được JSON: "+e.message,true)}finally{e.target.value=""}};
 $("renderButton").onclick=render;
 $("downloadResult").onclick=()=>{if(!state.generated)return;const a=document.createElement("a");a.href=state.generated;a.download="hoanggia-ai-image.png";document.body.append(a);a.click();a.remove()};
 function startNewProject(){
@@ -219,7 +219,7 @@ function startNewProject(){
  $("space").selectedIndex=0;updateZone();
  for(const id of ["style","camera","lighting","aspect","imageAI","expertMode","outputType","photoDirection"])$(id).selectedIndex=0;
  for(const id of ["roomWidthMm","roomDepthMm","clearanceMm","requiredClearanceMm","projectStandard","layoutMinimumGapMm","layoutItemsJson","layoutObstaclesJson","layoutDoorsJson"])$(id).value="";
- $("quality").value="medium";$("brief").value="";$("furnitureBrand").value="Không áp dụng";$("customBrand").value="";$("customBrandWrap").hidden=true;
+ $("quality").value="medium";$("brief").value="";window.hgCameraAI?.reset();$("furnitureBrand").value="Không áp dụng";$("customBrand").value="";$("customBrandWrap").hidden=true;
  for(const c of document.querySelectorAll("[data-brain]"))c.checked=true;
  for(const c of document.querySelectorAll("[data-lock]"))c.checked=["Architecture","Geometry","Camera"].includes(c.value);
  $("manualExperts").hidden=true;
