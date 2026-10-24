@@ -1,0 +1,63 @@
+// HOANGGIA CAMERA AI V1.1 — photography-purpose and mount-aware equipment selector
+const STYLES=[
+["interior","Nội thất","Không gian, phòng khách, showroom","14–35mm; phối cảnh tự nhiên"],
+["architecture","Kiến trúc","Mặt tiền, biệt thự, công trình","Góc rộng / Tilt-Shift; đường đứng thẳng"],
+["bokeh","Xóa phông","Chủ thể sắc nét, hậu cảnh mềm","Khẩu lớn; 35–135mm"],
+["furniture","Sản phẩm nội thất","Sofa, bàn, ghế, giường","35–85mm; bảo toàn tỷ lệ"],
+["macro","Chi tiết vật liệu","Da, vải, gỗ, đá, đường may","Macro lấy nét gần"],
+["cinematic","Cinematic Luxury","Chiều sâu, cảm xúc điện ảnh","24–85mm; ánh sáng có chủ đích"]
+];
+const db=[
+["Sony","FE",["A7R V","A1 II","A7 IV","A7CR","A7S III","A9 III","A7 III","A7C II","A7R IV","A7R III"],[
+["FE 16–35mm F2.8 GM II","interior architecture"],["FE 12–24mm F2.8 GM","interior architecture"],["FE 20mm F1.8 G","interior architecture cinematic"],["FE 24mm F1.4 GM","interior architecture cinematic"],["FE 35mm F1.4 GM","interior furniture bokeh cinematic"],["FE 50mm F1.4 GM","furniture bokeh cinematic"],["FE 50mm F1.2 GM","furniture bokeh cinematic"],["FE 85mm F1.4 GM II","furniture bokeh cinematic"],["FE 135mm F1.8 GM","bokeh furniture"],["FE 90mm F2.8 Macro G OSS","macro"],["FE 70–200mm F2.8 GM OSS II","bokeh furniture"],["FE 24–70mm F2.8 GM II","interior furniture cinematic"]]],
+["Canon","RF",["EOS R5 Mark II","EOS R5","EOS R6 Mark II","EOS R6 Mark III","EOS R3","EOS R1","EOS R8","EOS R6","EOS R5 C","EOS R"],[
+["RF 15–35mm F2.8 L IS USM","interior architecture"],["RF 14–35mm F4 L IS USM","interior architecture"],["RF 10–20mm F4 L IS STM","interior architecture"],["RF 24mm F1.8 Macro IS STM","interior cinematic"],["RF 35mm F1.4 L VCM","interior furniture bokeh cinematic"],["RF 50mm F1.2 L USM","furniture bokeh cinematic"],["RF 85mm F1.2 L USM","furniture bokeh cinematic"],["RF 100mm F2.8 L Macro IS USM","macro"],["RF 24–70mm F2.8 L IS USM","interior furniture cinematic"],["RF 70–200mm F2.8 L IS USM","bokeh furniture"],["TS-E 17mm f/4L + ngàm EF–EOS R","architecture"],["TS-E 24mm f/3.5L II + ngàm EF–EOS R","architecture"]]],
+["Nikon","Z",["Z8","Z9","Z7 II","Z6 III","Z6 II","Zf","Z5","Z5 II","Z7","Z6"],[
+["NIKKOR Z 14–24mm f/2.8 S","interior architecture"],["NIKKOR Z 17–28mm f/2.8","interior architecture"],["NIKKOR Z 20mm f/1.8 S","interior architecture cinematic"],["NIKKOR Z 24mm f/1.8 S","interior cinematic"],["NIKKOR Z 35mm f/1.8 S","interior furniture bokeh cinematic"],["NIKKOR Z 50mm f/1.8 S","furniture bokeh cinematic"],["NIKKOR Z 85mm f/1.2 S","furniture bokeh cinematic"],["NIKKOR Z MC 105mm f/2.8 VR S","macro"],["NIKKOR Z MC 50mm f/2.8","macro"],["NIKKOR Z 24–70mm f/2.8 S","interior furniture cinematic"],["PC NIKKOR 19mm f/4E ED + ngàm FTZ (kiểm tra điều khiển)","architecture"]]],
+["Fujifilm","GF",["GFX100 II","GFX100S II","GFX100","GFX100S","GFX50S II","GFX50R"],[
+["FUJINON GF20–35mm F4 R WR","interior architecture"],["FUJINON GF30mm F3.5 R WR","interior architecture"],["FUJINON GF23mm F4 R LM WR","interior architecture"],["FUJINON GF45mm F2.8 R WR","interior furniture cinematic"],["FUJINON GF55mm F1.7 R WR","furniture bokeh cinematic"],["FUJINON GF80mm F1.7 R WR","furniture bokeh cinematic"],["FUJINON GF110mm F2 R LM WR","bokeh furniture"],["FUJINON GF120mm F4 R LM OIS WR Macro","macro"]]],
+["Hasselblad","XCD",["X2D 100C","907X 100C","X1D II 50C","X1D 50C"],[
+["XCD 4/21","interior architecture"],["XCD 4/28P","interior architecture"],["XCD 3.5/30","interior architecture"],["XCD 2.5/38V","interior furniture cinematic"],["XCD 2.5/55V","furniture bokeh cinematic"],["XCD 1.9/80","furniture bokeh cinematic"],["XCD 2.5/90V","furniture bokeh cinematic"],["XCD 3.5/120 Macro","macro"]]],
+["Leica","L",["SL3","SL2","SL2-S","SL3-S"],[
+["Super-Vario-Elmarit-SL 14–24mm f/2.8 ASPH.","interior architecture"],["Super-Vario-Elmar-SL 16–35mm f/3.5–4.5 ASPH.","interior architecture"],["Summicron-SL 35mm f/2 ASPH.","interior furniture cinematic"],["Summilux-SL 50mm f/1.4 ASPH.","furniture bokeh cinematic"],["APO-Summicron-SL 75mm f/2 ASPH.","furniture bokeh cinematic"],["APO-Macro-Elmarit-TL 60mm f/2.8 ASPH. (crop mode)","macro"]]],
+["Phase One","XF",["XF IQ4 150MP","XF IQ4 100MP"],[
+["Schneider Kreuznach 35mm LS f/3.5","interior architecture"],["Schneider Kreuznach 55mm LS f/2.8","interior furniture"],["Schneider Kreuznach 80mm LS f/2.8","furniture cinematic"],["Schneider Kreuznach 120mm LS f/4 Macro","macro"],["Schneider Kreuznach 150mm LS f/2.8","bokeh furniture"]]]
+];
+const el=id=>document.getElementById(id);
+const make=(tag,txt)=>{const n=document.createElement(tag);if(txt)n.textContent=txt;return n};
+const opt=(v,t)=>{const n=make("option",t);n.value=v;return n};
+const $panel=el("hgCameraAI");
+if($panel){
+ const mode=el("hgCamMode"),style=el("hgCamStyle"),brand=el("hgCamBrand"),body=el("hgCamBody"),lens=el("hgCamLens"),aperture=el("hgCamAperture"),focus=el("hgCamFocus"),lock=el("hgCamLock"),all=el("hgCamAll"),summary=el("hgCamSummary");
+ STYLES.forEach(s=>style.append(opt(s[0],s[1]+" — "+s[2])));
+ db.forEach(d=>brand.append(opt(d[0],d[0])));
+ const purpose=()=>STYLES.find(s=>s[0]===style.value)||STYLES[0];
+ const current=()=>db.find(d=>d[0]===brand.value)||db[0];
+ const refresh=()=>{
+   const d=current(),oldBody=body.value,oldLens=lens.value;
+   body.replaceChildren(...d[2].map(x=>opt(x,d[0]+" "+x)));
+   if(d[2].includes(oldBody))body.value=oldBody;
+   const filtered=d[3].filter(x=>all.checked||x[1].split(" ").includes(style.value));
+   lens.replaceChildren(...filtered.map(x=>opt(x[0],d[0]+" "+x[0])));
+   if(filtered.some(x=>x[0]===oldLens))lens.value=oldLens;
+   summary.textContent=(mode.value==="auto"?"AI đề xuất: ":"Đang chọn: ")+d[0]+" "+body.value+" · "+d[0]+" "+(lens.value||"Chưa có lens phù hợp")+" · "+aperture.value+". "+purpose()[3]+".";
+   el("hgCamManual").hidden=mode.value==="auto";
+   el("hgCamAuto").hidden=mode.value!=="auto";
+   el("hgCamAuto").textContent="Gợi ý theo mục đích: "+purpose()[3]+". "+d[0]+" "+body.value+" · "+(lens.value||"Chưa có lens")+". Có thể chuyển MANUAL PRO để tùy chỉnh.";
+ };
+ [mode,style,brand,body,lens,aperture,focus,lock,all].forEach(n=>n.addEventListener("change",refresh));
+ window.hgCameraAI={
+  getSnapshot:()=>({mode:mode.value,style:style.value,brand:brand.value,body:body.value,lens:lens.value,aperture:aperture.value,focus:focus.value,lock:lock.checked,showAll:all.checked}),
+  restore(v){if(!v||typeof v!=="object")return;for(const [n,k] of [[mode,"mode"],[style,"style"],[brand,"brand"]])if(typeof v[k]==="string"&&[...n.options].some(o=>o.value===v[k]))n.value=v[k];refresh();for(const [n,k] of [[body,"body"],[lens,"lens"],[aperture,"aperture"],[focus,"focus"]])if(typeof v[k]==="string"&&[...n.options].some(o=>o.value===v[k]))n.value=v[k];lock.checked=v.lock!==false;all.checked=v.showAll===true;refresh()},
+  reset(){mode.value="auto";style.value="interior";brand.value="Sony";aperture.value="f/8";focus.value="all";lock.checked=true;all.checked=false;refresh()},
+  getPrompt(lang="vi"){
+   const s=purpose(),d=current(),chosen=d[3].find(x=>x[0]===lens.value);
+   if(!chosen)return "";
+   const focusText={auto:"AI-selected subject focus",subject:"sharp main subject with softly blurred background",all:"deep focus across the scene"}[focus.value];
+   const lockText=lock.checked?"Preserve original viewpoint, framing, geometry, vertical lines and furniture proportions.":"Adjust photographic viewpoint only if explicitly required; preserve architecture and furniture proportions.";
+   const en="CAMERA AI V1.1: Photography purpose: "+({interior:"interior",architecture:"architecture",bokeh:"background bokeh",furniture:"furniture product",macro:"material macro",cinematic:"cinematic luxury"}[s[0]])+". Camera body: "+d[0]+" "+body.value+" ("+d[1]+" mount). Lens: "+d[0]+" "+lens.value+". Aperture target: "+aperture.value+" (respect physical lens aperture limits). Focus: "+focusText+". "+lockText+" Optical rendering is a photographic simulation, not a claim of actual camera capture.";
+   return lang==="en"?en:"THIẾT LẬP CAMERA AI V1.1 (mô phỏng nhiếp ảnh): "+s[1]+". Thân máy: "+d[0]+" "+body.value+" (ngàm "+d[1]+"). Ống kính: "+d[0]+" "+lens.value+". Khẩu độ mục tiêu: "+aperture.value+" (giới hạn theo thông số thực của lens). Lấy nét: "+({auto:"AI tự chọn chủ thể",subject:"nét chủ thể, mờ hậu cảnh",all:"nét toàn bộ không gian"}[focus.value])+". "+(lock.checked?"Khóa góc nhìn, bố cục, hình học, đường đứng và tỷ lệ nội thất.":"Chỉ thay góc nhìn khi có yêu cầu; bảo toàn kiến trúc và tỷ lệ nội thất.")+" Đây là mô phỏng quang học, không phải ảnh chụp bằng thiết bị thật.";
+  }
+ };
+ refresh();
+}
