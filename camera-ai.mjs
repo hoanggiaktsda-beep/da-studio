@@ -39,7 +39,7 @@ const drones=[
 ];
 const APERTURES=[1.2,1.4,1.8,2,2.8,3.5,4,4.5,5.6,8,11,16,22];
 const preferred={interior:8,architecture:8,bokeh:1.8,furniture:5.6,macro:11,cinematic:2.8,flycam:5.6};
-function minimumF(name){const values=[...name.matchAll(/(?:f\\/?|F)(\\d+(?:\\.\\d+)?)/g)].map(m=>Number(m[1]));return values.length?Math.max(...values):null;}
+function minimumF(name){const values=[...name.matchAll(new RegExp("(?:f/|f|F)([0-9]+(?:[.][0-9]+)?)","g"))].map(m=>Number(m[1]));return values.length?Math.max(...values):null;}
 const el=id=>document.getElementById(id);
 const make=(tag,txt)=>{const n=document.createElement(tag);if(txt)n.textContent=txt;return n};
 const opt=(v,t)=>{const n=make("option",t);n.value=v;return n};
