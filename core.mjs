@@ -185,7 +185,7 @@ export function getWarnings(c){
  if(!c.brief?.trim())w.push("Chưa có mô tả thiết kế — AI sẽ dựa trên phong cách đã chọn.");
  if(!uniqueModelID(c.models))w.push("Model ID bị trùng.");
  const active=c.models.filter(m=>m.selected); 
- if(c.mode==="edit"&&c.locks.includes("Camera")&&c.camera&&c.camera!=="Không đề xuất"&&c.camera!=="HG tự đề xuất"&&c.camera!=="Giữ nguyên camera ảnh gốc")w.push("Xung đột: Camera Lock đang bật nhưng góc camera yêu cầu thay đổi."); 
+ if(c.mode==="edit"&&!c.masterImage&&c.locks.includes("Camera")&&c.camera&&c.camera!=="Không đề xuất"&&c.camera!=="HG tự đề xuất"&&c.camera!=="Giữ nguyên camera ảnh gốc")w.push("Xung đột: Camera Lock đang bật nhưng góc camera yêu cầu thay đổi."); 
  if(c.mode==="edit"&&c.locks.includes("Lighting")&&c.lighting&&c.lighting!=="Không đề xuất"&&c.lighting!=="HG tự đề xuất"&&c.lighting!=="Giữ nguyên ánh sáng ảnh gốc")w.push("Xung đột: Lighting Lock đang bật nhưng ánh sáng yêu cầu thay đổi.");
  if(active.length&&c.mode==="edit"&&active.some(m=>!m.target?.trim()))w.push("Có Model chưa ghi rõ đối tượng/vị trí cần thay thế.");
  if(active.some(m=>!m.references?.length))w.push("Có Model chưa có ảnh tham chiếu. AI chỉ sử dụng mô tả.");
@@ -203,8 +203,8 @@ export function compilePrompt(c){
  const visual=recommendVisual(c);
  const omit=v=>v==="Không đề xuất";
  const zone=c.zone==="HG tự đề xuất"?visual.zone:(omit(c.zone)?"":(c.zone||"Chưa xác định"));
- const style=c.style==="HG tự đề xuất"?visual.style:(omit(c.style)?"":c.style);
- const camera=c.camera==="HG tự đề xuất"?visual.camera:(omit(c.camera)?"":c.camera);
+ const style=c.masterImage&&c.referenceStyleMode!=="change"?"":(c.style==="HG tự đề xuất"?visual.style:(omit(c.style)?"":c.style));
+ const camera=c.masterImage?"":(c.camera==="HG tự đề xuất"?visual.camera:(omit(c.camera)?"":c.camera));
  const lighting=c.lighting==="HG tự đề xuất"?visual.lighting:(omit(c.lighting)?"":c.lighting);
  const uniq=values=>[...new Set(values.filter(Boolean).map(v=>String(v).trim()).filter(Boolean))];
  const references=active.map(m=>{
@@ -229,7 +229,7 @@ export function compilePrompt(c){
   "VAI TRÒ: "+authority.lead+" phụ trách thiết kế; "+brains.map(b=>b.name).join(", ")+" hỗ trợ theo chuyên môn, không vượt quyền thiết kế.",
   "NHIỆM VỤ: "+task,
   "RÀNG BUỘC: "+limits,
-  "KẾT QUẢ: Ảnh "+(c.mode==="edit"?"chỉnh sửa":"thiết kế")+" đúng yêu cầu, tỷ lệ "+(c.aspect||"3:2 Ngang")+", góc máy "+camera+", ánh sáng "+lighting+", vật liệu và phối cảnh chân thực; "+(c.outputType||"đầu ra hình ảnh")+"."
+  "KẾT QUẢ: Ảnh "+(c.mode==="edit"?"chỉnh sửa":"thiết kế")+" đúng yêu cầu, tỷ lệ "+(c.aspect||"3:2 Ngang")+(camera?", góc máy "+camera:"")+(lighting?", ánh sáng "+lighting:"")+", vật liệu và phối cảnh chân thực"+(omit(c.outputType)?"":"; "+(c.outputType||"đầu ra hình ảnh"))+"."
  ].join("\n\n");
 }
 
