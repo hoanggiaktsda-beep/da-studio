@@ -101,7 +101,7 @@ function getEffectivePrompt(){
  }
  return compile();
 }
-function regeneratePrompt(){ $("promptOutput").dataset.userEdited="false";return compile(); }
+function regeneratePrompt(){ $("promptOutput").dataset.userEdited="false";$("promptEditStatus").textContent="Prompt đã biên dịch lại từ cấu hình. Có thể sửa trực tiếp trước khi sử dụng.";return compile(); }
 function downloadText(name,content,type="text/plain"){const b=new Blob([content],{type}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2500)}
 async function readDataURL(f){return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Không đọc được "+f.name));reader.readAsDataURL(f)})}
 async function render(){
@@ -183,7 +183,7 @@ $("addModel").onclick=addModel;
 $("expertMode").onchange=()=>{$("manualExperts").hidden=$("expertMode").value!=="manual"};
 $("compile").onclick=regeneratePrompt;
 $("promptOutput").addEventListener("input",()=>{$("promptOutput").dataset.userEdited="true";$("promptEditStatus").textContent="Đang dùng prompt Ốc đã chỉnh sửa. Bấm BIÊN DỊCH PROMPT để tạo lại từ cấu hình.";});
-$("copyPrompt").onclick=async()=>{try{await navigator.clipboard.writeText(compile());showStatus("Đã sao chép prompt.")}catch{showStatus("Không sao chép được. Hãy chọn và sao chép văn bản trong ô prompt.",true)}};
+$("copyPrompt").onclick=async()=>{try{await navigator.clipboard.writeText(getEffectivePrompt());showStatus("Đã sao chép prompt.")}catch{showStatus("Không sao chép được. Hãy chọn và sao chép văn bản trong ô prompt.",true)}};
 $("downloadPrompt").onclick=()=>downloadText("hoanggia-prompt.txt",getEffectivePrompt());
 $("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"2.0",...projectSnapshot(liveSettings()),cameraAI:window.hgCameraAI?.getSnapshot()},null,2),"application/json");
 $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;const v=JSON.parse(await f.text());if(!v||typeof v!=="object"||!Array.isArray(v.models))throw Error("Sai cấu trúc JSON");
@@ -202,7 +202,7 @@ $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)retu
  $("manualExperts").hidden=$("expertMode").value!=="manual";
  if(v.aspect){const option=[...$("aspect").options].find(x=>x.textContent===v.aspect);if(option)$("aspect").selectedIndex=option.index}updateRenderHints()
  state.generated=null;$("resultView").removeAttribute("src");$("resultView").hidden=true;$("resultEmpty").hidden=false;$("downloadResult").hidden=true;
- $("promptOutput").textContent="Prompt đã biên dịch sẽ hiển thị tại đây...";$("warnings").replaceChildren();
+ $("promptOutput").value="Prompt đã biên dịch sẽ hiển thị tại đây...";$("promptOutput").dataset.userEdited="false";$("promptEditStatus").textContent="Có thể sửa prompt ngay trong ô này. Nội dung đã sửa sẽ được dùng khi tạo ảnh, sao chép và tải TXT. Bấm BIÊN DỊCH PROMPT để tạo lại.";$("warnings").replaceChildren();
  document.querySelector('input[name="hgReferenceStyle"][value="'+(v.referenceStyleMode==="change"?"change":"keep")+'"]').checked=true;document.querySelector('input[name="hgReferenceStyle"]:checked').dispatchEvent(new Event("change"));window.hgCameraAI?.restore(v.cameraAI);setMode(v.mode==="edit"?"edit":"create");drawModels();updateMaster(null);updateRenderHints();updatePhotoAdvice();showStatus("Đã nhập cấu hình. Vì lý do bảo mật, vui lòng tải lại file ảnh gốc.");}catch(e){showStatus("Không nhập được JSON: "+e.message,true)}finally{e.target.value=""}};
 $("renderButton").onclick=render;
 $("downloadResult").onclick=()=>{if(!state.generated)return;const a=document.createElement("a");a.href=state.generated;a.download="hoanggia-ai-image.png";document.body.append(a);a.click();a.remove()};
@@ -223,7 +223,7 @@ function startNewProject(){
  for(const c of document.querySelectorAll("[data-brain]"))c.checked=true;
  for(const c of document.querySelectorAll("[data-lock]"))c.checked=["Architecture","Geometry","Camera"].includes(c.value);
  $("manualExperts").hidden=true;
- $("promptOutput").textContent="Prompt đã biên dịch sẽ hiển thị tại đây...";
+ $("promptOutput").value="Prompt đã biên dịch sẽ hiển thị tại đây...";$("promptOutput").dataset.userEdited="false";$("promptEditStatus").textContent="Có thể sửa prompt ngay trong ô này. Nội dung đã sửa sẽ được dùng khi tạo ảnh, sao chép và tải TXT. Bấm BIÊN DỊCH PROMPT để tạo lại.";
  $("warnings").replaceChildren();
  $("resultView").removeAttribute("src");$("resultView").hidden=true;
  $("resultEmpty").hidden=false;$("downloadResult").hidden=true;
