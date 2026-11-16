@@ -105,7 +105,9 @@ function regeneratePrompt(){ $("promptOutput").dataset.userEdited="false";$("pro
 function downloadText(name,content,type="text/plain"){const b=new Blob([content],{type}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2500)}
 async function readDataURL(f){return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Không đọc được "+f.name));reader.readAsDataURL(f)})}
 async function render(){
- const c=liveSettings(),prompt=getEffectivePrompt(),w=getWarnings(c);
+ const c=liveSettings(),w=getWarnings(c);
+  let prompt;
+  try{prompt=getEffectivePrompt()}catch(error){showStatus(error.message||String(error),true);return}
  if(!resolveImageAI(c.imageAI,c).canRender){showStatus("AI đã chọn chưa được kết nối trực tiếp. Hãy sao chép prompt và mở nền tảng AI tương ứng.",true);return}
  if(state.master&&!validImage(state.master)){showStatus("Ảnh gốc phải là JPG/PNG/WebP và không quá 5 MB.",true);return}
  if(c.mode==="edit"&&!state.master){showStatus("Cần tải ảnh gốc trước khi chỉnh sửa.",true);return}
@@ -184,7 +186,7 @@ $("expertMode").onchange=()=>{$("manualExperts").hidden=$("expertMode").value!==
 $("compile").onclick=regeneratePrompt;
 $("promptOutput").addEventListener("input",()=>{$("promptOutput").dataset.userEdited="true";$("promptEditStatus").textContent="Đang dùng prompt Ốc đã chỉnh sửa. Bấm BIÊN DỊCH PROMPT để tạo lại từ cấu hình.";});
 $("copyPrompt").onclick=async()=>{try{await navigator.clipboard.writeText(getEffectivePrompt());showStatus("Đã sao chép prompt.")}catch{showStatus("Không sao chép được. Hãy chọn và sao chép văn bản trong ô prompt.",true)}};
-$("downloadPrompt").onclick=()=>downloadText("hoanggia-prompt.txt",getEffectivePrompt());
+$("downloadPrompt").onclick=()=>{try{downloadText("hoanggia-prompt.txt",getEffectivePrompt())}catch(error){showStatus(error.message||String(error),true)}};
 $("exportProject").onclick=()=>downloadText("da-studio-project.json",JSON.stringify({version:"2.0",...projectSnapshot(liveSettings()),cameraAI:window.hgCameraAI?.getSnapshot()},null,2),"application/json");
 $("importProject").onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;const v=JSON.parse(await f.text());if(!v||typeof v!=="object"||!Array.isArray(v.models))throw Error("Sai cấu trúc JSON");
  if(v.models.length>200)throw Error("Dự án có quá 200 Model");
